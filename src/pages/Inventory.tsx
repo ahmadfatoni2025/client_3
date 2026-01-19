@@ -147,7 +147,7 @@ export class Inventory extends Component<{}, State> {
                         {/* Right Column (Fixed Sidebar Content) */}
                         <div className="lg:col-span-3 space-y-10 sticky top-8 h-fit">
                             {/* Critical Alerts */}
-                            <section className="bg-slate-950 rounded-[40px] p-8 text-white relative overflow-hidden shadow-2xl">
+                            <section className="bg-slate-100 rounded-[40px] p-8 text-slate-950 relative overflow-hidden shadow-2xl">
                                 <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12 transition-transform"><AlertTriangle size={80} /></div>
                                 <h3 className="text-[10px] font-black tracking-[0.2em] uppercase mb-8 flex items-center gap-2 text-rose-500">
                                     <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]"></div>

@@ -16,7 +16,7 @@ import {
     MessageSquare,
     Sparkles,
     Menu,
-    X
+    X,
 } from 'lucide-react';
 
 const mainNav = [
@@ -33,7 +33,7 @@ interface State {
     isMobileOpen: boolean;
 }
 
-export class Navbar extends Component<{}, State> {
+export class Sidebar extends Component<{}, State> {
     private searchRef = React.createRef<HTMLInputElement>();
 
     constructor(props: {}) {
@@ -79,7 +79,7 @@ export class Navbar extends Component<{}, State> {
                 {/* Mobile Header Toggle */}
                 <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-100 flex items-center justify-between px-6 z-40 backdrop-blur-md bg-white/80">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black italic text-xs">M.</div>
+                        <div className="w-8 h-8"><img src="https://avatars.githubusercontent.com/u/218720883?v=4" alt="foto_profile" /></div>
                         <span className="font-black text-slate-900 text-sm italic">MBG System</span>
                     </div>
                     <button
@@ -106,8 +106,8 @@ export class Navbar extends Component<{}, State> {
                     {/* Brand Header */}
                     <div className="p-6">
                         <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/10 mb-8 shadow-2xl">
-                            <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white font-black italic shadow-lg shadow-emerald-500/20">
-                                M.
+                            <div className="w-10 h-10 rounded-xl">
+                                <img src="https://avatars.githubusercontent.com/u/218720883?v=4" className="rounded-xl" alt="foto_profile" />
                             </div>
                             <div>
                                 <h2 className="text-[14px] font-black text-white leading-none tracking-tight">MBG System</h2>
@@ -149,7 +149,7 @@ export class Navbar extends Component<{}, State> {
                                         <MessageSquare size={18} className="transition-transform group-hover:scale-110" />
                                         <span>Pesan masuk</span>
                                     </div>
-                                    <span className="text-[10px] font-black bg-rose-500 text-white px-2 py-0.5 rounded-full shadow-lg shadow-rose-100">3</span>
+                                    <span className="text-[10px] font-black bg-rose-500 text-white px-2 py-0.5 rounded-full shadow-lg shadow-rose-600">3</span>
                                 </div>
                             </NavLink>
                         </div>
@@ -205,4 +205,4 @@ export class Navbar extends Component<{}, State> {
 }
 
 
-export default Navbar;
+export default Sidebar;

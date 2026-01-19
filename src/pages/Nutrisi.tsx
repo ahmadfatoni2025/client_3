@@ -23,26 +23,7 @@ import {
 
 
 import TabelNutrisi from '../ui/tabelNutrisi';
-
-interface NutritionItem {
-    id: number;
-    name: string;
-    category: string;
-    calories: number;
-    protein: number;
-    fiber: number;
-    vitC: number;
-    carbs: number;
-    fat: number;
-    price: string;
-    status: string;
-    rating: number;
-    selected: boolean;
-    image: string;
-    description: string;
-    stock?: number;
-    tkpiCode?: string;
-}
+import type { NutritionItem } from '../ui/tabelNutrisi';
 
 interface MenuPlan {
     id: string;
@@ -54,11 +35,17 @@ interface State {
     activeTab: 'database' | 'planner' | 'calculator' | 'tkpi';
     searchQuery: string;
     isModalOpen: boolean;
+    isEditing: boolean;
+    currentItemId: string | null;
     viewMode: 'table' | 'bento';
     bentoGridSize: number;
     items: NutritionItem[];
     newItem: Partial<NutritionItem>;
     isCustomCategory: boolean;
+    isLoading: boolean;
+    error: string | null;
+
+    imageFile: File | null;
 
     // NutriPlanner State
     menuCycle: MenuPlan[];
@@ -67,26 +54,38 @@ interface State {
 }
 
 export class Nutrisi extends Component<{}, State> {
-    // Reference to file input if needed for camera integration
-
-
     categorySuggestions = ['Buah-buahan', 'Sayuran Hijau', 'Umbi-umbian', 'Kacang-kacangan', 'Biji-bijian'];
 
+    handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Ukuran file maksimal 2MB');
+                return;
+            }
+            const imageUrl = URL.createObjectURL(file);
+            this.setState(prev => ({
+                newItem: { ...prev.newItem, img: imageUrl },
+                imageFile: file
+            }));
+        }
+    };
     constructor(props: {}) {
         super(props);
         this.state = {
             activeTab: 'database',
             searchQuery: '',
             isModalOpen: false,
+            isEditing: false,
+            currentItemId: null,
             viewMode: 'table',
             bentoGridSize: 4,
-            items: [
-                { id: 1, name: 'Pisang Ambon', category: 'Buah-buahan', calories: 89, protein: 1.1, fiber: 2.6, vitC: 8.7, carbs: 22.8, fat: 0.3, price: 'Rp 5.000', status: 'Segar', rating: 4.8, selected: false, image: 'https://images.unsplash.com/photo-1571771894821-ad99026.jpg?q=80&w=200&auto=format&fit=crop', description: 'Pisang lokal kualitas super', stock: 45, tkpiCode: 'BA001' },
-                { id: 2, name: 'Stroberi Segar', category: 'Buah-buahan', calories: 33, protein: 0.7, fiber: 2.0, vitC: 58.8, carbs: 7.7, fat: 0.3, price: 'Rp 15.000', status: 'Segar', rating: 4.5, selected: false, image: 'https://images.unsplash.com/photo-1464961130338-3932245ca94f?q=80&w=200&auto=format&fit=crop', description: 'Stroberi petik langsung dari kebun', stock: 12, tkpiCode: 'BA002' },
-                { id: 3, name: 'Brokoli Hijau', category: 'Sayuran Hijau', calories: 34, protein: 2.8, fiber: 2.6, vitC: 89.2, carbs: 6.6, fat: 0.4, price: 'Rp 8.000', status: 'Terbatas', rating: 4.7, selected: false, image: 'https://images.unsplash.com/photo-1584270354949-c26b0d5b4a0c?q=80&w=200&auto=format&fit=crop', description: 'Sayuran organik tanpa pestisida', stock: 8, tkpiCode: 'BA003' },
-            ],
-            newItem: { category: 'Buah-buahan', status: 'Segar', rating: 5.0, image: '' },
+            items: [],
+            newItem: { category: 'Buah-buahan', status: 'Tersedia', img: '', protein: 0, carbs: 0, fats: 0, calories: 0 },
             isCustomCategory: false,
+            isLoading: false,
+            error: null,
+            imageFile: null,
             menuCycle: [
                 { id: '1', day: 'Senin', meals: [{ type: 'Siang', menu: 'Nasi Ayam Serundeng + Sayur Asem', calories: 450 }] },
                 { id: '2', day: 'Selasa', meals: [{ type: 'Siang', menu: 'Nasi Ikan Goreng + Tumis Kacang', calories: 420 }] },
@@ -96,51 +95,126 @@ export class Nutrisi extends Component<{}, State> {
         };
     }
 
+    componentDidMount() {
+        this.fetchItems();
+    }
+
+    fetchItems = async () => {
+        this.setState({ isLoading: true, error: null });
+        try {
+            const response = await fetch('http://localhost:5000/api/inventory');
+            const result = await response.json();
+            if (result.success) {
+                const formatted = result.data.map((item: any) => ({
+                    ...item,
+                    protein: item.protein || 0,
+                    carbs: item.carbs || 0,
+                    fats: item.fats || 0,
+                    calories: item.calories || 0,
+                    status: item.stock_quantity > 10 ? 'Tersedia' : item.stock_quantity > 0 ? 'Terbatas' : 'Habis',
+                    selected: false
+                }));
+                this.setState({ items: formatted, isLoading: false });
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (err) {
+            this.setState({ error: 'Gagal mengambil data', isLoading: false });
+        }
+    };
+
     handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => this.setState({ searchQuery: e.target.value });
-    toggleModal = () => this.setState(prev => ({ isModalOpen: !prev.isModalOpen }));
+
+    toggleModal = () => {
+        if (this.state.isModalOpen) {
+            this.setState({ isModalOpen: false, isEditing: false, currentItemId: null, newItem: { category: 'Buah-buahan', status: 'Tersedia', img: '', protein: 0, carbs: 0, fats: 0, calories: 0 }, imageFile: null });
+        } else {
+            this.setState({ isModalOpen: true });
+        }
+    };
 
     handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         this.setState(prev => ({ newItem: { ...prev.newItem, [name]: value } }));
     };
 
-    handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const imageUrl = URL.createObjectURL(file);
-            this.setState(prev => ({ newItem: { ...prev.newItem, image: imageUrl } }));
+    handleAddItem = async (e: FormEvent) => {
+        e.preventDefault();
+        this.setState({ isLoading: true });
+        const { newItem, isEditing, currentItemId } = this.state;
+
+        const url = isEditing
+            ? `http://localhost:5000/api/inventory/${currentItemId}`
+            : 'http://localhost:5000/api/inventory';
+        const method = isEditing ? 'PUT' : 'POST';
+
+        try {
+            let currentImg = newItem.img;
+
+            if (this.state.imageFile) {
+                const uploadFormData = new FormData();
+                uploadFormData.append('image', this.state.imageFile);
+
+                const uploadRes = await fetch('http://localhost:5000/api/inventory/upload', {
+                    method: 'POST',
+                    body: uploadFormData
+                });
+                const uploadResult = await uploadRes.json();
+                if (uploadResult.success) {
+                    currentImg = uploadResult.url;
+                } else {
+                    throw new Error('Gagal mengupload gambar');
+                }
+            }
+
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...newItem, img: currentImg })
+            });
+            const result = await response.json();
+            if (result.success) {
+                this.toggleModal();
+                this.fetchItems();
+            } else {
+                alert('Gagal menyimpan: ' + result.message);
+            }
+        } catch (err) {
+            alert('Terjadi kesalahan: ' + (err instanceof Error ? err.message : 'Koneksi terputus'));
+        } finally {
+            this.setState({ isLoading: false });
         }
     };
 
-    handleAddItem = (e: FormEvent) => {
-        e.preventDefault();
-        const { newItem, items } = this.state;
-        const item: NutritionItem = {
-            id: Date.now(),
-            name: newItem.name || '',
-            category: newItem.category || 'Lainnya',
-            calories: Number(newItem.calories) || 0,
-            protein: Number(newItem.protein) || 0,
-            fiber: Number(newItem.fiber) || 0,
-            vitC: Number(newItem.vitC) || 0,
-            carbs: Number(newItem.carbs) || 0,
-            fat: Number(newItem.fat) || 0,
-            price: newItem.price || 'Rp 0',
-            status: newItem.status || 'Segar',
-            rating: 5.0,
-            selected: false,
-            image: newItem.image || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?q=80&w=200&auto=format&fit=crop',
-            description: newItem.description || '',
-            stock: Number(newItem.stock) || 0,
-        };
+    handleEdit = (item: NutritionItem) => {
         this.setState({
-            items: [item, ...items],
-            isModalOpen: false,
-            newItem: { category: 'Buah-buahan', status: 'Segar', rating: 5.0, image: '' }
+            isModalOpen: true,
+            isEditing: true,
+            currentItemId: item.id,
+            newItem: { ...item }
         });
     };
 
-    handleToggleSelect = (id: number) => {
+    handleDeleteSelected = async () => {
+        const selectedIds = this.state.items.filter(i => i.selected).map(i => i.id);
+        if (selectedIds.length === 0) return;
+        if (!confirm(`Hapus ${selectedIds.length} item?`)) return;
+
+        this.setState({ isLoading: true });
+        try {
+            for (const id of selectedIds) {
+                await fetch(`http://localhost:5000/api/inventory/${id}`, { method: 'DELETE' });
+            }
+            this.fetchItems();
+        } catch (err) {
+            alert('Gagal menghapus');
+        } finally {
+            this.setState({ isLoading: false });
+        }
+    };
+
+
+    handleToggleSelect = (id: string) => {
         this.setState(prev => ({
             items: prev.items.map(item => item.id === id ? { ...item, selected: !item.selected } : item)
         }));
@@ -207,15 +281,30 @@ export class Nutrisi extends Component<{}, State> {
                                 </div>
 
                                 {viewMode === 'table' ? (
-                                    <div className="overflow-x-auto rounded-[28px] border border-slate-100 shadow-sm">
-                                        <TabelNutrisi searchQuery={searchQuery} items={filteredItems} onToggleSelect={this.handleToggleSelect} onToggleSelectAll={() => { }} onDeleteSelected={() => { }} />
+                                    <div className="overflow-x-auto rounded-[28px] border border-slate-100 shadow-sm relative">
+                                        {this.state.isLoading && (
+                                            <div className="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                                                <RefreshCcw className="animate-spin text-emerald-500" size={32} />
+                                            </div>
+                                        )}
+                                        <TabelNutrisi
+                                            searchQuery={searchQuery}
+                                            items={filteredItems}
+                                            onToggleSelect={this.handleToggleSelect}
+                                            onToggleSelectAll={() => {
+                                                const allSelected = filteredItems.length > 0 && filteredItems.every(i => i.selected);
+                                                this.setState({ items: this.state.items.map(i => ({ ...i, selected: !allSelected })) });
+                                            }}
+                                            onDeleteSelected={this.handleDeleteSelected}
+                                            onEdit={this.handleEdit}
+                                        />
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                                         {filteredItems.map(item => (
                                             <div key={item.id} className="bg-white rounded-[24px] md:rounded-[32px] p-4 md:p-5 border border-slate-100 shadow-sm hover:shadow-xl transition-all group relative">
                                                 <div className="aspect-square rounded-xl md:rounded-2xl mb-4 overflow-hidden bg-slate-50 relative border border-slate-50">
-                                                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                                    <img src={item.img || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?q=80&w=200&auto=format&fit=crop'} alt={item.name} className="w-full h-full object-cover" />
                                                     <button
                                                         onClick={() => this.addToCalculator(item)}
                                                         className="absolute bottom-2 right-2 w-8 h-8 bg-emerald-600 text-white rounded-xl flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all active:scale-90"
@@ -226,7 +315,7 @@ export class Nutrisi extends Component<{}, State> {
                                                 <h4 className="font-black text-slate-800 text-sm">{item.name}</h4>
                                                 <div className="flex justify-between items-center mt-2">
                                                     <span className="text-[10px] font-black text-slate-400 uppercase">{item.calories} kkal</span>
-                                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${item.stock && item.stock < 10 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'}`}>Stok: {item.stock || 0}</span>
+                                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${item.stock_quantity && item.stock_quantity < 10 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'}`}>Stok: {item.stock_quantity || 0}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -251,7 +340,7 @@ export class Nutrisi extends Component<{}, State> {
                                                 <h4 className="text-lg font-black text-slate-800 underline decoration-emerald-500 decoration-4 underline-offset-4">{plan.day}</h4>
                                                 <button className="text-[10px] font-black text-emerald-600 uppercase">Input Menu</button>
                                             </div>
-                                            {plan.meals.map((meal, idx) => (
+                                            {plan.meals.map((meal: any, idx: number) => (
                                                 <div key={idx} className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
                                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{meal.type}</p>
                                                     <p className="text-sm font-black text-slate-800">{meal.menu}</p>
@@ -395,9 +484,9 @@ export class Nutrisi extends Component<{}, State> {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Foto Produk</label>
                                         <label className="block aspect-square rounded-[32px] border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer overflow-hidden relative group">
-                                            {this.state.newItem.image ? (
+                                            {this.state.newItem.img ? (
                                                 <>
-                                                    <img src={this.state.newItem.image} alt="Preview" className="w-full h-full object-cover" />
+                                                    <img src={this.state.newItem.img} alt="Preview" className="w-full h-full object-cover" />
                                                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <span className="text-white text-xs font-bold bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm">Ganti Foto</span>
                                                     </div>
@@ -407,8 +496,8 @@ export class Nutrisi extends Component<{}, State> {
                                                     <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-sm text-emerald-500">
                                                         <Upload size={32} />
                                                     </div>
-                                                    <span className="text-xs font-bold">Upload Foto Lokal</span>
-                                                    <span className="text-[10px]">JPG, PNG max 5MB</span>
+                                                    <span className="text-xs font-bold">Upload Foto Lokal (Max 2MB)</span>
+                                                    <span className="text-[10px]">JPG, PNG max 2MB</span>
                                                 </div>
                                             )}
                                             <input type="file" accept="image/*" onChange={this.handleImageUpload} className="hidden" />
@@ -446,16 +535,16 @@ export class Nutrisi extends Component<{}, State> {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Makanan</label>
-                                            <input required name="name" onChange={this.handleInputChange} type="text" placeholder="Contoh: Ayam Goreng Mentega" className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 outline-none transition-all" />
+                                            <input required name="name" value={this.state.newItem.name || ''} onChange={this.handleInputChange} type="text" placeholder="Contoh: Ayam Goreng Mentega" className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 outline-none transition-all" />
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Harga / Unit</label>
-                                                <input name="price" onChange={this.handleInputChange} type="text" placeholder="Rp 0" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3.5 text-sm font-bold focus:ring-4 focus:ring-emerald-50 outline-none" />
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SKU / Kode</label>
+                                                <input name="sku" value={this.state.newItem.sku || ''} onChange={this.handleInputChange} type="text" placeholder="MBG-XXX" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3.5 text-sm font-bold focus:ring-4 focus:ring-emerald-50 outline-none" />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stok Awal</label>
-                                                <input name="stock" onChange={this.handleInputChange} type="number" placeholder="0" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3.5 text-sm font-bold focus:ring-4 focus:ring-emerald-50 outline-none" />
+                                                <input name="stock_quantity" value={this.state.newItem.stock_quantity || ''} onChange={this.handleInputChange} type="number" placeholder="0" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3.5 text-sm font-bold focus:ring-4 focus:ring-emerald-50 outline-none" />
                                             </div>
                                         </div>
                                     </div>
@@ -484,9 +573,7 @@ export class Nutrisi extends Component<{}, State> {
                                                     { label: 'Energi / Kalori', name: 'calories', unit: 'kkal' },
                                                     { label: 'Protein', name: 'protein', unit: 'g' },
                                                     { label: 'Karbohidrat', name: 'carbs', unit: 'g' },
-                                                    { label: 'Lemak Total', name: 'fat', unit: 'g' },
-                                                    { label: 'Serat Pangan', name: 'fiber', unit: 'g' },
-                                                    { label: 'Vitamin C', name: 'vitC', unit: 'mg' },
+                                                    { label: 'Lemak Total', name: 'fats', unit: 'g' },
                                                 ].map((row) => (
                                                     <tr key={row.name} className="group hover:bg-slate-50 transition-colors">
                                                         <td className="px-6 py-2">
@@ -500,6 +587,7 @@ export class Nutrisi extends Component<{}, State> {
                                                         <td className="px-6 py-2">
                                                             <input
                                                                 name={row.name}
+                                                                value={(this.state.newItem as any)[row.name] || ''}
                                                                 onChange={this.handleInputChange}
                                                                 type="number"
                                                                 step="0.1"

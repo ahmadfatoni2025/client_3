@@ -18,21 +18,29 @@ import {
 
 interface ProductionBatch {
     id: string;
-    menuName: string;
-    targetPortions: number;
-    currentProgress: number;
-    status: 'Persiapan' | 'Memasak' | 'Selesai' | 'Distribusi';
-    startTime: string;
-    chef: string;
-    items: string[];
-    temp: number;
+    meal_time: string;
+    target_portions: number;
+    status: string;
+    recipes: {
+        name: string;
+    };
+    chef?: string;
 }
 
-interface DapurLog {
-    time: string;
-    temp: number;
-    portions: number;
-    activity: string;
+interface KitchenLog {
+    id: string;
+    created_at: string;
+    status: string;
+    chef_id?: string;
+    menu_plan_id: string;
+    menu_plans?: {
+        recipes?: {
+            name: string;
+        }
+    };
+    profiles?: {
+        full_name: string;
+    };
 }
 
 interface State {
@@ -40,7 +48,15 @@ interface State {
     activeKitchens: number;
     totalMealsPrepared: number;
     isModalOpen: boolean;
-    newBatch: Partial<ProductionBatch>;
+    newBatch: {
+        recipeId: string;
+        targetPortions: number;
+        chefId: string;
+        mealTime: string;
+        date: string;
+    };
+    isLoading: boolean;
+    errorMessage: string | null;
 
     // Advanced Features State
     currentTemp: number;
@@ -48,8 +64,10 @@ interface State {
     apdCompliance: Record<string, boolean>;
     waste: { organic: number, inorganic: number };
     sampling: { id: string, name: string, time: string, status: string }[];
-    logs: DapurLog[];
+    logs: KitchenLog[];
     activeTab: 'produksi' | 'sop' | 'qc' | 'waste';
+    recipes: { id: string, name: string }[];
+    chefs: { id: string, full_name: string }[];
 }
 
 export class Dapur extends Component<{}, State> {
@@ -61,39 +79,44 @@ export class Dapur extends Component<{}, State> {
             activeKitchens: 4,
             totalMealsPrepared: 1250,
             isModalOpen: false,
+            isLoading: false,
+            errorMessage: null,
             activeTab: 'produksi',
             currentTemp: 24.5,
-            newBatch: { menuName: '', targetPortions: 100, chef: '' },
+            newBatch: {
+                recipeId: '',
+                targetPortions: 100,
+                chefId: '',
+                mealTime: 'Siang',
+                date: new Date().toISOString().split('T')[0]
+            },
             sopChecked: {
-                'cuci-tangan': true,
-                'steril-alat': true,
-                'cek-bahan': true,
-                'suhu-air': false,
-                'kebersihan-lantai': true
+                'hygiene-pribadi': true,
+                'sterilisasi-area': true,
+                'cek-sampel-bahan': true,
+                'suhu-chiller': false,
+                'kebersihan-drainase': true
             },
             apdCompliance: {
-                'masker': true,
-                'sarung-tangan': true,
-                'celemek': true,
-                'penutup-kepala': false
+                'masker-medis': true,
+                'sarung-tangan-latex': true,
+                'celemek-anti-air': true,
+                'hairnet': false
             },
             waste: { organic: 12.5, inorganic: 3.2 },
             sampling: [
                 { id: "SMP-001", name: "Ayam Serundeng", time: "06:30", status: "Aman" },
                 { id: "SMP-002", name: "Buncis Tumis", time: "06:45", status: "Proses Lab" }
             ],
-            logs: [
-                { time: "06:00", temp: 22.1, portions: 0, activity: "Persiapan Batch B101" },
-                { time: "07:30", temp: 28.4, portions: 250, activity: "Memasak Tengah Batch B101" }
-            ],
-            batches: [
-                { id: "BATCH-101", menuName: "Nasi Putih, Ayam Serundeng, Tumis Buncis", targetPortions: 500, currentProgress: 85, status: 'Memasak', startTime: "06:00", chef: "Chef Junaidi", items: ["Beras", "Ayam", "Buncis"], temp: 82 },
-                { id: "BATCH-102", menuName: "Nasi Kuning, Telur Balado, Orek Tempe", targetPortions: 350, currentProgress: 100, status: 'Selesai', startTime: "05:30", chef: "Chef Renatta", items: ["Beras Kuning", "Telur", "Tempe"], temp: 75 },
-            ]
+            logs: [],
+            batches: [],
+            recipes: [],
+            chefs: []
         };
     }
 
     componentDidMount() {
+        this.fetchData();
         // IoT Temperature Simulation
         this.tempInterval = setInterval(() => {
             this.setState(prev => ({
@@ -101,6 +124,76 @@ export class Dapur extends Component<{}, State> {
             }));
         }, 3000);
     }
+
+    fetchData = async () => {
+        this.setState({ isLoading: true });
+        try {
+            const [tasksRes, recipesRes, chefsRes, logsRes] = await Promise.all([
+                fetch('http://localhost:5000/api/kitchen/tasks'),
+                fetch('http://localhost:5000/api/nutrition/recipes'),
+                fetch('http://localhost:5000/api/profiles'),
+                fetch('http://localhost:5000/api/kitchen/logs')
+            ]);
+
+            const tasksData = await tasksRes.json();
+            const recipesData = await recipesRes.json();
+            const chefsData = await chefsRes.json();
+            const logsData = await logsRes.json();
+
+            this.setState({
+                batches: tasksData.success ? tasksData.data : [],
+                recipes: recipesData.success ? recipesData.data : [],
+                chefs: chefsData.success ? chefsData.data : [],
+                logs: logsData.success ? logsData.data : [],
+                isLoading: false
+            });
+        } catch (error) {
+            this.setState({ errorMessage: 'Koneksi ke server gagal', isLoading: false });
+        }
+    };
+
+    handleUpdateStatus = async (menuPlanId: string, nextStatus: string) => {
+        try {
+            const response = await fetch('http://localhost:5000/api/kitchen/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    menuPlanId,
+                    status: nextStatus,
+                    chefId: this.state.chefs[0]?.id // Default to first chef for simulation
+                })
+            });
+            const result = await response.json();
+            if (result.success) {
+                this.fetchData();
+            } else {
+                alert('Gagal update status: ' + result.message);
+            }
+        } catch (error) {
+            alert('Terjadi kesalahan koneksi');
+        }
+    };
+
+    handleNewBatch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const { newBatch } = this.state;
+        try {
+            const response = await fetch('http://localhost:5000/api/nutrition/menu-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newBatch)
+            });
+            const result = await response.json();
+            if (result.success) {
+                this.setState({ isModalOpen: false });
+                this.fetchData();
+            } else {
+                alert('Gagal membuat rencana: ' + result.message);
+            }
+        } catch (error) {
+            alert('Kesalahan koneksi');
+        }
+    };
 
     componentWillUnmount() {
         clearInterval(this.tempInterval);
@@ -122,40 +215,36 @@ export class Dapur extends Component<{}, State> {
         }));
     };
 
-    handleNewBatch = (e: React.FormEvent) => {
-        e.preventDefault();
-        const { newBatch, batches } = this.state;
-        const batch: ProductionBatch = {
-            id: `BATCH-${100 + batches.length + 1}`,
-            menuName: newBatch.menuName || 'Menu Kustom',
-            targetPortions: Number(newBatch.targetPortions) || 100,
-            currentProgress: 0,
-            status: 'Persiapan',
-            startTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            chef: newBatch.chef || 'Chef On-Duty',
-            items: ['Baku Utama'],
-            temp: 24
-        };
-        this.setState({
-            batches: [batch, ...batches],
-            isModalOpen: false,
-            newBatch: { menuName: '', targetPortions: 100, chef: '' }
-        });
+    getStatusProgress = (status: string) => {
+        switch (status) {
+            case 'PLANNED': return 5;
+            case 'PERSIAPAN': return 25;
+            case 'MEMASAK': return 60;
+            case 'PACKING': return 90;
+            case 'DONE': return 100;
+            default: return 0;
+        }
     };
 
-    updateBatchProgress = (id: string, progress: number) => {
-        this.setState(prev => ({
-            batches: prev.batches.map(b => {
-                if (b.id === id) {
-                    const newProgress = Math.min(100, Math.max(0, b.currentProgress + progress));
-                    let newStatus = b.status;
-                    if (newProgress === 100) newStatus = 'Selesai';
-                    else if (newProgress > 0) newStatus = 'Memasak';
-                    return { ...b, currentProgress: newProgress, status: newStatus };
-                }
-                return b;
-            })
-        }));
+    getStatusColor = (status: string) => {
+        switch (status) {
+            case 'PLANNED': return 'bg-slate-100 text-slate-500';
+            case 'PERSIAPAN': return 'bg-blue-50 text-blue-600';
+            case 'MEMASAK': return 'bg-orange-50 text-orange-600';
+            case 'PACKING': return 'bg-purple-50 text-purple-600';
+            case 'DONE': return 'bg-emerald-50 text-emerald-600';
+            default: return 'bg-slate-50 text-slate-400';
+        }
+    };
+
+    getNextStatus = (status: string) => {
+        switch (status) {
+            case 'PLANNED': return 'PERSIAPAN';
+            case 'PERSIAPAN': return 'MEMASAK';
+            case 'MEMASAK': return 'PACKING';
+            case 'PACKING': return 'DONE';
+            default: return null;
+        }
     };
 
     render() {
@@ -207,30 +296,90 @@ export class Dapur extends Component<{}, State> {
                                     <h2 className="text-lg font-black text-slate-800 flex items-center gap-2 italic">
                                         <UtensilsCrossed size={20} className="text-orange-500" /> Antrean Batch Aktif
                                     </h2>
-                                    <button onClick={this.toggleModal} className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white text-xs font-black rounded-xl hover:bg-orange-600 transition-all shadow-lg active:scale-95">
-                                        <Plus size={14} /> Batch Baru
+                                    <button onClick={this.toggleModal} className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-orange-700 transition-all shadow-xl shadow-orange-100 active:scale-95">
+                                        <Plus size={16} /> Register New Batch
                                     </button>
                                 </div>
-                                {batches.map(batch => (
-                                    <div key={batch.id} className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm hover:shadow-md transition-all">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-black px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md">ID: {batch.id}</span>
-                                                    <h4 className="font-black text-slate-800 leading-tight">{batch.menuName}</h4>
+
+                                {this.state.isLoading ? (
+                                    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[40px] border border-slate-100 shadow-sm">
+                                        <Activity size={48} className="text-orange-500 animate-spin mb-4" />
+                                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Sinkronisasi Database Dapur...</p>
+                                    </div>
+                                ) : batches.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[40px] border border-slate-100 shadow-sm">
+                                        <UtensilsCrossed size={48} className="text-slate-200 mb-4" />
+                                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Tidak ada antrean masak aktif</p>
+                                    </div>
+                                ) : batches.map(batch => (
+                                    <div key={batch.id} className="bg-white rounded-[40px] border border-slate-100 p-8 shadow-sm hover:shadow-xl transition-all border-l-[6px] border-l-orange-500">
+                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                                            <div className="space-y-3 flex-1">
+                                                <div className="flex flex-wrap items-center gap-3">
+                                                    <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${this.getStatusColor(batch.status)}`}>
+                                                        {batch.status}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-r border-slate-100 pr-3 mr-3">ID: {batch.id.slice(0, 8)}</span>
+                                                    <div className="flex items-center gap-1.5 text-xs text-slate-400 font-bold">
+                                                        <History size={14} /> {batch.meal_time}
+                                                    </div>
                                                 </div>
-                                                <p className="text-xs text-slate-400 font-bold">Chef: {batch.chef} • Target: {batch.targetPortions} Porsi</p>
+                                                <h4 className="text-xl font-black text-slate-900 tracking-tight leading-tight">{batch.recipes?.name || 'Menu Unnamed'}</h4>
+                                                <div className="flex flex-wrap items-center gap-6">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
+                                                            <Activity size={14} className="text-slate-400" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[9px] font-black text-slate-400 uppercase leading-none">Target</p>
+                                                            <p className="text-xs font-black text-slate-700">{batch.target_portions} Porsi</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
+                                                            <Thermometer size={14} className="text-orange-500" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[9px] font-black text-slate-400 uppercase leading-none">Temp. Masak</p>
+                                                            <p className="text-xs font-black text-slate-700">72.4°C</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <button onClick={() => this.updateBatchProgress(batch.id, 10)} className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:scale-105 active:scale-90 transition-all">
-                                                <Play size={18} />
-                                            </button>
+
+                                            <div className="flex items-center gap-3 w-full md:w-auto">
+                                                {this.getNextStatus(batch.status) ? (
+                                                    <button
+                                                        onClick={() => this.handleUpdateStatus(batch.id, this.getNextStatus(batch.status)!)}
+                                                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-orange-600 transition-all active:scale-95 group"
+                                                    >
+                                                        {batch.status === 'PLANNED' ? 'Mulai Persiapan' :
+                                                            batch.status === 'PERSIAPAN' ? 'Mulai Memasak' :
+                                                                batch.status === 'MEMASAK' ? 'Proses Packing' :
+                                                                    'Finalisasi Batch'}
+                                                        <Play size={14} className="group-hover:translate-x-1 transition-transform" />
+                                                    </button>
+                                                ) : (
+                                                    <div className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-emerald-50 text-emerald-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-emerald-100">
+                                                        <Check size={16} /> Batch Selesai
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="w-full h-2.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                                            <div className="h-full bg-orange-500 transition-all duration-700" style={{ width: `${batch.currentProgress}%` }} />
-                                        </div>
-                                        <div className="flex justify-between items-center mt-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                            <span>Progress: {batch.currentProgress}%</span>
-                                            <span className="flex items-center gap-2">Suhu Masak: <span className="text-slate-900">{batch.temp}°C</span> <Thermometer size={10} /></span>
+
+                                        <div className="mt-8 space-y-2">
+                                            <div className="flex justify-between items-end">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                    Process Integrity <span className="text-xs font-bold text-slate-600">{this.getStatusProgress(batch.status)}%</span>
+                                                </p>
+                                                <span className="text-[10px] font-bold text-emerald-500 italic">No violations detected</span>
+                                            </div>
+                                            <div className="w-full h-3 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                                                <div
+                                                    className="h-full bg-orange-500 transition-all duration-1000 shadow-[0_0_15px_rgba(249,115,22,0.3)]"
+                                                    style={{ width: `${this.getStatusProgress(batch.status)}%` }}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -343,19 +492,25 @@ export class Dapur extends Component<{}, State> {
                         <div className="bg-slate-900 text-white rounded-[40px] p-8 shadow-2xl relative overflow-hidden">
                             <div className="relative z-10 space-y-6">
                                 <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
-                                    <History size={20} className="text-orange-400" /> Log Produksi Harian
+                                    <History size={20} className="text-orange-400" /> Log Produksi Terakhir
                                 </h3>
                                 <div className="space-y-6">
-                                    {logs.map((log, i) => (
-                                        <div key={i} className="flex gap-4 relative group">
-                                            {i !== logs.length - 1 && <div className="absolute left-1 top-6 bottom-0 w-0.5 bg-slate-800" />}
-                                            <div className="w-2 h-2 rounded-full bg-orange-500 mt-2 border-4 border-slate-900 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
-                                            <div>
-                                                <p className="text-[11px] font-black text-slate-200">{log.activity}</p>
-                                                <p className="text-[9px] font-bold text-slate-500 uppercase mt-1 tracking-widest">{log.time} • Porsi: {log.portions} • Suhu: {log.temp}°C</p>
+                                    {logs.length === 0 ? (
+                                        <p className="text-[10px] text-slate-500 italic">Belum ada aktivitas tercatat</p>
+                                    ) : (
+                                        logs.map((log: KitchenLog, i: number) => (
+                                            <div key={log.id} className="flex gap-4 relative group">
+                                                {i !== logs.length - 1 && <div className="absolute left-1 top-6 bottom-0 w-0.5 bg-slate-800" />}
+                                                <div className={`w-2 h-2 rounded-full mt-2 border-4 border-slate-900 shadow-[0_0_10px_rgba(249,115,22,0.5)] ${log.status === 'DONE' ? 'bg-emerald-500' : 'bg-orange-500'}`} />
+                                                <div>
+                                                    <p className="text-[11px] font-black text-slate-200">{log.menu_plans?.recipes?.name || 'Unknown Menu'}</p>
+                                                    <p className="text-[9px] font-bold text-slate-500 uppercase mt-1 tracking-widest">
+                                                        {new Date(log.created_at).toLocaleTimeString()} • {log.status} • {log.profiles?.full_name || 'Chef'}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))
+                                    )}
                                 </div>
                                 <button onClick={() => alert("Downloading Digital Production Log PDF...")} className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all">
                                     Download Log Digital
@@ -392,22 +547,58 @@ export class Dapur extends Component<{}, State> {
                             </div>
                             <form onSubmit={this.handleNewBatch} className="p-8 space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Menu Produksi</label>
-                                    <input required type="text" placeholder="Misal: Nasi Tim Ayam + Sop Jamur" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-orange-100 outline-none transition-all" />
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pilih Resep / Menu</label>
+                                    <select
+                                        required
+                                        value={this.state.newBatch.recipeId}
+                                        onChange={(e) => this.setState({ newBatch: { ...this.state.newBatch, recipeId: e.target.value } })}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-orange-100 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="">Pilih Menu...</option>
+                                        {this.state.recipes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                    </select>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Porsi</label>
-                                        <input required type="number" placeholder="500" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold" />
+                                        <input
+                                            required
+                                            type="number"
+                                            value={this.state.newBatch.targetPortions}
+                                            onChange={(e) => this.setState({ newBatch: { ...this.state.newBatch, targetPortions: parseInt(e.target.value) } })}
+                                            placeholder="500"
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold"
+                                        />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Chef On-Duty</label>
-                                        <input required type="text" placeholder="Nama Chef" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold" />
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Waktu Makan</label>
+                                        <select
+                                            required
+                                            value={this.state.newBatch.mealTime}
+                                            onChange={(e) => this.setState({ newBatch: { ...this.state.newBatch, mealTime: e.target.value } })}
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold"
+                                        >
+                                            <option value="Pagi">Pagi</option>
+                                            <option value="Siang">Siang</option>
+                                            <option value="Sore">Sore</option>
+                                        </select>
                                     </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Chef On-Duty</label>
+                                    <select
+                                        required
+                                        value={this.state.newBatch.chefId}
+                                        onChange={(e) => this.setState({ newBatch: { ...this.state.newBatch, chefId: e.target.value } })}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold"
+                                    >
+                                        <option value="">Pilih Chef...</option>
+                                        {this.state.chefs.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
+                                    </select>
                                 </div>
                                 <div className="flex gap-4 pt-4">
                                     <button type="button" onClick={this.toggleModal} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest">Batal</button>
-                                    <button type="submit" className="flex-2 py-4 bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-orange-100 active:scale-95 transition-all">Validasi & Mulai Masak</button>
+                                    <button type="submit" className="flex-2 py-4 bg-orange-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-orange-100 active:scale-95 transition-all">Mulai Produksi</button>
                                 </div>
                             </form>
                         </div>

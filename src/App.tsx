@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './ui/navbar';
+import Sidebar from './ui/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
 import Nutrisi from './pages/Nutrisi';
@@ -25,7 +25,7 @@ export class App extends Component {
       <Router>
         <div className="flex min-h-screen bg-[#f8fafc]">
           {/* Sidebar */}
-          <Navbar />
+          <Sidebar />
 
           {/* Main Content Area */}
           <main className="flex-1 lg:ml-64 p-4 md:p-8 pt-24 lg:pt-8 min-h-screen overflow-x-hidden">
