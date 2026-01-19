@@ -67,8 +67,8 @@ export class Navbar extends Component<{}, State> {
     navLinkClass = ({ isActive }: { isActive: boolean }) => `
     flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all group
     ${isActive
-            ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
-            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40'
+            : 'text-slate-400 hover:text-white hover:bg-white/5'
         }
   `;
 
@@ -101,13 +101,13 @@ export class Navbar extends Component<{}, State> {
 
                 {/* Sidebar */}
                 <aside className={`
-                    fixed top-0 left-0 h-screen w-64 bg-white border-r border-slate-100 flex flex-col z-50 overflow-y-auto no-scrollbar transition-transform duration-300 lg:translate-x-0
+                    fixed top-0 left-0 h-screen w-64 bg-slate-950 border-r border-slate-900 flex flex-col z-50 overflow-y-auto no-scrollbar transition-transform duration-300 lg:translate-x-0
                     ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
                 `}>
                     {/* Brand Header */}
                     <div className="p-6">
-                        <div className="flex items-center gap-3 p-4 bg-slate-900 rounded-2xl border border-slate-800 mb-8 shadow-xl shadow-slate-100">
-                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-900 font-black italic">
+                        <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/10 mb-8 shadow-2xl">
+                            <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white font-black italic shadow-lg shadow-emerald-500/20">
                                 M.
                             </div>
                             <div>
@@ -120,15 +120,25 @@ export class Navbar extends Component<{}, State> {
                         <div className="space-y-1.5">
                             <p className="px-3 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-4">Operations</p>
                             {mainNav.map((item) => (
-                                <NavLink
-                                    key={item.name}
-                                    to={item.path}
-                                    className={this.navLinkClass}
-                                    onClick={() => this.setState({ isMobileOpen: false })}
-                                >
-                                    <item.icon size={18} className="transition-transform group-hover:scale-110" />
-                                    {item.name}
-                                </NavLink>
+                                <div key={item.name}>
+                                    <NavLink
+                                        to={item.path}
+                                        className={this.navLinkClass}
+                                        onClick={() => this.setState({ isMobileOpen: false })}
+                                    >
+                                        <item.icon size={18} className="transition-transform group-hover:scale-110" />
+                                        {item.name}
+                                    </NavLink>
+
+                                    {item.name === 'Inventory' && (
+                                        <div className="ml-9 mt-2 space-y-1 border-l-2 border-slate-800 pl-4 mb-4">
+                                            <NavLink to="/stok-barang" className="block py-1.5 text-[10px] font-black text-slate-500 hover:text-emerald-400 uppercase tracking-widest transition-colors">Stok Barang</NavLink>
+                                            <NavLink to="/pemasok-umkm" className="block py-1.5 text-[10px] font-black text-slate-500 hover:text-emerald-400 uppercase tracking-widest transition-colors">Pemasok UMKM</NavLink>
+                                            <NavLink to="/pengadaan-digital" className="block py-1.5 text-[10px] font-black text-slate-500 hover:text-emerald-400 uppercase tracking-widest transition-colors">Pengadaan Digital</NavLink>
+                                            <NavLink to="/scan-opname" className="block py-1.5 text-[10px] font-black text-slate-500 hover:text-emerald-400 uppercase tracking-widest transition-colors">Scan Opname</NavLink>
+                                        </div>
+                                    )}
+                                </div>
                             ))}
                             <NavLink
                                 to="/messages"
@@ -146,8 +156,8 @@ export class Navbar extends Component<{}, State> {
                         </div>
 
                         {/* Settings/Info Section */}
-                        <div className="mt-1 pt-4 border-t border-slate-50 space-y-1.5">
-                            <p className="px-3 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-4">Pengaturan tambahan</p>
+                        <div className="mt-1 pt-4 border-t border-slate-900 space-y-1.5">
+                            <p className="px-3 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-4">Pengaturan tambahan</p>
                             <NavLink
                                 to="/help"
                                 className={this.navLinkClass}
@@ -177,15 +187,15 @@ export class Navbar extends Component<{}, State> {
 
                     {/* Upgrade Callout */}
                     <div className="mt-auto p-6">
-                        <div className="bg-slate-900 p-5 rounded-[24px] shadow-2xl relative overflow-hidden group cursor-pointer active:scale-95 transition-all">
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -mr-12 -mt-12" />
+                        <div className="bg-emerald-600 p-5 rounded-[24px] shadow-2xl relative overflow-hidden group cursor-pointer active:scale-95 transition-all">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-12 -mt-12" />
                             <div className="flex items-center gap-3 mb-3">
-                                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-white">
+                                <div className="w-8 h-8 bg-black/20 rounded-lg flex items-center justify-center text-white">
                                     <Sparkles size={16} className="animate-pulse" />
                                 </div>
                             </div>
                             <p className="text-[12px] font-black text-white leading-tight">Pro License Active</p>
-                            <p className="text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Premium Support ON</p>
+                            <p className="text-[9px] font-bold text-emerald-100 mt-1 uppercase tracking-widest">Premium Support ON</p>
                             <ChevronRight size={14} className="absolute bottom-5 right-5 text-white opacity-40 group-hover:translate-x-1 transition-transform" />
                         </div>
                     </div>

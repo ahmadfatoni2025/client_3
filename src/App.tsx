@@ -14,6 +14,11 @@ import Analytics from './pages/Analytics';
 import Help from './pages/Help';
 import Feedback from './pages/Feedback';
 
+import StokBarang from './pages/StokBarang';
+import PemasokUMKM from './pages/PemasokUMKM';
+import PengadaanDigital from './pages/PengadaanDigital';
+import ScanOpname from './pages/ScanOpname';
+
 export class App extends Component {
   render() {
     return (
@@ -28,6 +33,10 @@ export class App extends Component {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/inventory" element={<Inventory />} />
+                <Route path="/stok-barang" element={<StokBarang />} />
+                <Route path="/pemasok-umkm" element={<PemasokUMKM />} />
+                <Route path="/pengadaan-digital" element={<PengadaanDigital />} />
+                <Route path="/scan-opname" element={<ScanOpname />} />
                 <Route path="/nutrisi" element={<Nutrisi />} />
                 <Route path="/dapur" element={<Dapur />} />
                 <Route path="/keuangan" element={<Keuangan />} />

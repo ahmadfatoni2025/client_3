@@ -3,28 +3,23 @@ import { Component } from 'react';
 import {
     Search,
     Download,
-    History,
     AlertTriangle,
     BarChart3,
-    TrendingUp,
     Store,
     FileText,
     Truck,
-    ShoppingBag,
     QrCode,
-    LayoutGrid,
-    List,
     Plus,
     Filter,
     ChevronLeft,
     ChevronRight,
     Bell,
-    Calendar as CalendarIcon
+    Calendar as CalendarIcon,
+    Heart,
+    Mail
 } from 'lucide-react';
 
 import { INVENTORY_DATA } from '../data/mockData';
-
-
 import TabelInventory from '../ui/tabelInventory';
 
 interface Vendor {
@@ -57,15 +52,17 @@ interface State {
 }
 
 export class Inventory extends Component<{}, State> {
-    // Reference to search input if needed for focus management
-
     categories = [
-        { name: 'Semua', icon: Store, bg: 'bg-slate-100', color: 'text-slate-600' },
-        { name: 'Beras', icon: History, bg: 'bg-emerald-50', color: 'text-emerald-600' },
-        { name: 'Protein', icon: ShoppingBag, bg: 'bg-red-50', color: 'text-red-600' },
-        { name: 'Sayuran', icon: TrendingUp, bg: 'bg-orange-50', color: 'text-orange-600' },
-        { name: 'Bumbu', icon: FileText, bg: 'bg-purple-50', color: 'text-purple-600' },
-        { name: 'Lainnya', icon: BarChart3, bg: 'bg-blue-50', color: 'text-blue-600' },
+        { name: 'Fruits', icon: '🍎', bg: 'bg-slate-50' },
+        { name: 'Bread', icon: '🍞', bg: 'bg-slate-50' },
+        { name: 'Vegetable', icon: '🥦', bg: 'bg-slate-50' },
+        { name: 'Fish', icon: '🐟', bg: 'bg-slate-50' },
+        { name: 'Meat', icon: '🍖', bg: 'bg-slate-50' },
+        { name: 'Drinks', icon: '🥤', bg: 'bg-slate-50' },
+        { name: 'Sea Food', icon: '🐙', bg: 'bg-slate-50' },
+        { name: 'Ice cream', icon: '🍦', bg: 'bg-slate-50' },
+        { name: 'Juice', icon: '🍹', bg: 'bg-slate-50' },
+        { name: 'Jam', icon: '🍯', bg: 'bg-slate-50' },
     ];
 
     constructor(props: {}) {
@@ -91,243 +88,173 @@ export class Inventory extends Component<{}, State> {
     }
 
     render() {
-        const { activeTab, searchQuery, vendors, pos, isAddingVendor, isScanning } = this.state;
-
+        const { activeTab, searchQuery, vendors, pos, isAddingVendor, isScanning, viewMode } = this.state;
 
         return (
-            <div className="space-y-6 pb-20">
-                {/* Tab Navigation */}
-                <div className="flex bg-white p-1.5 rounded-2xl border border-slate-100 w-full md:w-fit shadow-sm overflow-x-auto no-scrollbar gap-1">
-                    {[
-                        { id: 'inventory', label: 'Stok', icon: <History size={16} /> },
-                        { id: 'suppliers', label: 'Pemasok', icon: <Truck size={16} /> },
-                        { id: 'procurement', label: 'Purchase', icon: <FileText size={16} /> },
-                        { id: 'opname', label: 'Audit', icon: <BarChart3 size={16} /> },
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => this.setState({ activeTab: tab.id as any })}
-                            className={`flex items-center gap-2 px-4 md:px-6 py-3 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-orange-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-                        >
-                            {tab.icon} {tab.label}
-                        </button>
-                    ))}
-                    <button onClick={() => this.setState({ isScanning: true })} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95">
-                        <QrCode size={16} /> <span className="hidden sm:inline">Scan QR/Barcode</span><span className="sm:hidden">Scan</span>
-                    </button>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    <div className="lg:col-span-3">
-                        {activeTab === 'inventory' && (
-                            <div className="space-y-6">
-                                <div className="flex flex-col sm:flex-row items-center justify-between bg-white p-4 rounded-[28px] border border-slate-100 shadow-sm gap-4">
-                                    <div className="relative w-full sm:w-80">
-                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                        <input
-                                            type="text"
-                                            placeholder="Cari ID barang atau nama..."
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 pl-11 pr-4 text-sm font-bold focus:ring-4 focus:ring-orange-50 outline-none transition-all"
-                                            value={searchQuery}
-                                            onChange={(e) => this.setState({ searchQuery: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                                        <button onClick={() => alert("Mengatur strategi FIFO/LIFO...")} className="flex-1 sm:flex-none px-6 py-2.5 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400">FIFO Active</button>
-                                        <button onClick={() => alert("Download Laporan Stok...")} className="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all"><Download size={20} /></button>
-                                    </div>
-                                </div>
-                                <div className="overflow-x-auto rounded-[28px] border border-slate-100 shadow-sm">
-                                    <TabelInventory searchQuery={searchQuery} />
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'suppliers' && (
-                            <div className="bg-white rounded-[40px] border border-slate-100 p-8 shadow-sm space-y-8">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">Pemasok UMKM & Koperasi</h3>
-                                    <button onClick={() => this.setState({ isAddingVendor: true })} className="px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Tambah Pemasok</button>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {vendors.map(v => (
-                                        <div key={v.id} className="p-6 bg-slate-50 rounded-[32px] border border-slate-100 hover:shadow-lg transition-all relative overflow-hidden group">
-                                            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><Store size={60} /></div>
-                                            <div className="flex items-center gap-3 mb-6">
-                                                <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${v.type === 'UMKM' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>{v.type}</span>
-                                                <span className="text-[10px] font-black text-slate-400">#{v.id}</span>
-                                            </div>
-                                            <h4 className="text-xl font-black text-slate-900 mb-1">{v.name}</h4>
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Kategori: {v.category}</p>
-
-                                            <div className="mt-8 space-y-4 pt-6 border-t border-slate-200">
-                                                <div className="flex justify-between items-center">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase">Vendor Performance</p>
-                                                    <span className="text-xs font-black text-emerald-600">{v.performance}%</span>
-                                                </div>
-                                                <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-emerald-500" style={{ width: `${v.performance}%` }} />
-                                                </div>
-                                                <div className="flex justify-between items-center pt-2">
-                                                    <p className="text-[10px] font-bold text-slate-400">Order Terakhir: {v.lastOrder}</p>
-                                                    <button onClick={() => alert(`Review Performa ${v.name}...`)} className="text-[10px] font-black text-slate-900 hover:underline">Lihat Detail</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'procurement' && (
-                            <div className="bg-white rounded-[40px] border border-slate-100 p-8 shadow-sm space-y-8">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">Purchase Order (PO) Digital</h3>
-                                    <button onClick={() => alert("Membuat Draft PO Baru...")} className="px-6 py-3 bg-red-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Draft PO Baru</button>
-                                </div>
-                                <div className="space-y-4">
-                                    {pos.map(po => (
-                                        <div key={po.id} className="p-6 bg-slate-50 rounded-[32px] border border-slate-100 flex items-center justify-between group hover:bg-white hover:border-orange-500 transition-all">
-                                            <div className="flex items-center gap-6">
-                                                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-400 shadow-sm border border-slate-100">
-                                                    <FileText size={24} />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-black text-slate-800">{po.id}</h4>
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{po.vendor} • {po.date}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-10">
-                                                <div className="text-right">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Total Nilai</p>
-                                                    <p className="font-black text-slate-900">Rp {po.total.toLocaleString()}</p>
-                                                </div>
-                                                <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${po.status === 'Selesai' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100 animate-pulse'}`}>
-                                                    {po.status}
-                                                </span>
-                                                <button onClick={() => alert(`Download PO ${po.id} (PDF)`)} className="p-3 text-slate-300 hover:text-slate-900 transition-colors"><Download size={18} /></button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'opname' && (
-                            <div className="bg-white rounded-[40px] border border-slate-100 p-8 shadow-sm space-y-8 text-center py-20">
-                                <div className="w-24 h-24 bg-orange-50 rounded-[40px] flex items-center justify-center mx-auto mb-6">
-                                    <QrCode size={40} className="text-orange-500" />
-                                </div>
-                                <h3 className="text-2xl font-black text-slate-900 tracking-tight">Real-time Stock Opname</h3>
-                                <p className="text-sm font-medium text-slate-400 max-w-sm mx-auto">Gunakan pemindaian QR/Barcode untuk melakukan audit stok secara cepat dan akurat di gudang MBG.</p>
-                                <div className="flex justify-center gap-4 pt-6">
-                                    <button onClick={() => this.setState({ isScanning: true })} className="px-8 py-4 bg-orange-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">Mulai Scan Audit</button>
-                                    <button onClick={() => alert("Membuka Log Audit Terakhir...")} className="px-8 py-4 bg-white border border-slate-100 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-600">Riwayat Opname</button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="space-y-6">
-                        {/* Minimum Stock Alert */}
-                        <div className="bg-red-600 text-white rounded-[40px] p-8 shadow-2xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12"><AlertTriangle size={80} /></div>
-                            <h3 className="text-lg font-black tracking-tight flex items-center gap-2 mb-4">Stock Alert!</h3>
-                            <div className="space-y-4">
-                                <div className="p-4 bg-white/10 rounded-2xl border border-white/10">
-                                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Barang Kritis</p>
-                                    <p className="text-sm font-black mt-1">Beras Mentik (Sisa 12kg)</p>
-                                    <button onClick={() => alert("Membuat PO Otomatis untuk Beras...")} className="mt-4 w-full py-2 bg-white text-red-600 rounded-xl text-[10px] font-black uppercase">Re-order Sekarang</button>
-                                </div>
-                            </div>
+            <div className="flex min-h-screen bg-[#f8fafc] animate-in fade-in duration-700">
+                {/* Main Content */}
+                <main className="flex-1 overflow-y-auto">
+                    {/* Header */}
+                    <header className="flex items-center justify-between mb-10">
+                        <div className="relative w-full max-w-xl">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search inventory intelligence..."
+                                className="w-full bg-white border border-slate-100 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all shadow-sm"
+                                value={searchQuery}
+                                onChange={(e) => this.setState({ searchQuery: e.target.value })}
+                            />
                         </div>
 
-                        {/* Recent Activity Log */}
-                        <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm">
-                            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center justify-between">Inbound Logs <History size={16} className="text-slate-300" /></h4>
-                            <div className="space-y-6">
-                                {[
-                                    { time: '14:20', text: 'Stok Masuk: 500kg Ayam', type: 'in' },
-                                    { time: '12:00', text: 'Opname Batch #22 Selesai', type: 'info' },
-                                    { time: '09:45', text: 'PO-2026-001 Dervalidasi', type: 'check' }
-                                ].map((log, i) => (
-                                    <div key={i} className="flex gap-4 relative">
-                                        {i !== 2 && <div className="absolute left-1 top-4 bottom-0 w-px bg-slate-100" />}
-                                        <div className="w-2 h-2 rounded-full bg-orange-500 mt-1.5 shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => this.setState({ isScanning: true })} className="p-3 rounded-xl bg-slate-950 text-white hover:bg-slate-900 transition-all shadow-xl shadow-slate-200 flex items-center gap-2 px-5 active:scale-95">
+                                <QrCode size={18} />
+                                <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Scan Audit</span>
+                            </button>
+                            <div className="flex items-center gap-2">
+                                <button className="p-3 rounded-xl bg-white text-slate-400 hover:text-emerald-600 transition-all border border-slate-100 shadow-sm relative">
+                                    <Mail size={18} />
+                                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+                                </button>
+                                <button className="p-3 rounded-xl bg-white text-slate-400 hover:text-emerald-600 transition-all border border-slate-100 shadow-sm relative">
+                                    <Bell size={18} />
+                                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                        {/* Left Column (Main Dashboard Content) */}
+                        <div className="lg:col-span-9 space-y-12">
+
+                            {/* Analytics Summary */}
+                            <section className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                <div className="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm hover:border-emerald-100 transition-all group">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Inventory Health</p>
+                                    <div className="flex items-end justify-between">
                                         <div>
-                                            <p className="text-[11px] font-bold text-slate-800">{log.text}</p>
-                                            <p className="text-[9px] font-bold text-slate-400 mt-0.5 tracking-tighter uppercase">{log.time}</p>
+                                            <h3 className="text-3xl font-black text-slate-900">94.2%</h3>
+                                            <p className="text-[11px] font-bold text-emerald-600 mt-1 cursor-default">↑ 2.4% vs last month</p>
+                                        </div>
+                                        <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+                                            <BarChart3 size={24} />
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                                <div className="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm hover:border-emerald-100 transition-all group">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Total Stock Value</p>
+                                    <div className="flex items-end justify-between">
+                                        <div>
+                                            <h3 className="text-3xl font-black text-slate-900">Rp 1.2B</h3>
+                                            <p className="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Active Assets</p>
+                                        </div>
+                                        <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-600 group-hover:scale-110 transition-transform">
+                                            <Store size={24} />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm hover:border-rose-100 transition-all group">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Pending POs</p>
+                                    <div className="flex items-end justify-between">
+                                        <div>
+                                            <h3 className="text-3xl font-black text-slate-900">14</h3>
+                                            <p className="text-[11px] font-bold text-rose-500 mt-1 cursor-default">4 Requires Attention</p>
+                                        </div>
+                                        <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600 group-hover:scale-110 transition-transform">
+                                            <FileText size={24} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* Popular Products (Refined UI) */}
+                            <section>
+                                <div className="flex items-center justify-between mb-8">
+                                    <div>
+                                        <h2 className="text-xl font-black text-slate-800 tracking-tight">Active Inventory</h2>
+                                        <p className="text-xs font-medium text-slate-400 mt-0.5 uppercase tracking-widest">Real-time Telemetry Data</p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <button className="text-[10px] font-black text-emerald-600 hover:underline uppercase tracking-widest">Global Export</button>
+                                        <div className="w-px h-4 bg-slate-200" />
+                                        <button className="text-[10px] font-black text-slate-400 hover:text-slate-800 uppercase tracking-widest">System Logs</button>
+                                    </div>
+                                </div>
+
+                                <TabelInventory searchQuery={searchQuery} />
+                            </section>
                         </div>
 
-                        {/* Vendor Performance Quick Chart */}
-                        <div className="bg-slate-900 text-white rounded-[40px] p-8 shadow-sm">
-                            <div className="flex justify-between items-center mb-6">
-                                <h4 className="text-xs font-black uppercase tracking-widest">Global Vendor Rank</h4>
-                                <TrendingUp size={16} className="text-emerald-500" />
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center"><span className="text-[11px] font-bold text-slate-400">Quality Rate</span><span className="text-xs font-black">98.2%</span></div>
-                                <div className="flex justify-between items-center"><span className="text-[11px] font-bold text-slate-400">On-Time Delivery</span><span className="text-xs font-black">94.5%</span></div>
-                            </div>
+                        {/* Right Column (Fixed Sidebar Content) */}
+                        <div className="lg:col-span-3 space-y-10 sticky top-8 h-fit">
+                            {/* Critical Alerts */}
+                            <section className="bg-slate-950 rounded-[40px] p-8 text-white relative overflow-hidden shadow-2xl">
+                                <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12Scale-110 transition-transform"><AlertTriangle size={80} /></div>
+                                <h3 className="text-[10px] font-black tracking-[0.2em] uppercase mb-8 flex items-center gap-2 text-rose-500">
+                                    <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]"></div>
+                                    Critical Inventory
+                                </h3>
+
+                                <div className="space-y-4 relative z-10">
+                                    <div className="p-5 bg-white/5 rounded-3xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1 group-hover:text-emerald-400 transition-colors">Safety Level Breach</p>
+                                        <h4 className="text-sm font-bold truncate">Beras Mentik Wangi</h4>
+                                        <div className="flex items-center justify-between mt-5">
+                                            <span className="text-rose-400 font-black text-[10px] px-2 py-1 bg-rose-500/10 rounded-lg">Stock: 12kg</span>
+                                            <Plus size={14} className="text-slate-500 group-hover:text-white transition-colors" />
+                                        </div>
+                                    </div>
+                                    <div className="p-5 bg-white/5 rounded-3xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1 group-hover:text-emerald-400 transition-colors">Low Inventory</p>
+                                        <h4 className="text-sm font-bold truncate">Minyak Goreng Sawit</h4>
+                                        <div className="flex items-center justify-between mt-5">
+                                            <span className="text-amber-400 font-black text-[10px] px-2 py-1 bg-amber-500/10 rounded-lg">Stock: 5L</span>
+                                            <Plus size={14} className="text-slate-500 group-hover:text-white transition-colors" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* Recent Distribution */}
+                            <section className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-100">
+                                <h3 className="text-[10px] font-black tracking-[0.2em] uppercase mb-8 text-slate-400">Network Partners</h3>
+                                <div className="space-y-6">
+                                    {vendors.slice(0, 3).map((v) => (
+                                        <div key={v.id} className="flex items-center gap-4 group cursor-pointer hover:translate-x-1 transition-transform">
+                                            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors border border-slate-100">
+                                                <Truck size={20} />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="text-sm font-black text-slate-800 leading-tight line-clamp-1">{v.name}</h4>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{v.type}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs font-black text-emerald-600">{v.performance}%</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button onClick={() => window.location.href = '/pemasok-umkm'} className="w-full mt-8 py-4 bg-slate-50 hover:bg-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 transition-all active:scale-95">Directory Access</button>
+                            </section>
                         </div>
                     </div>
-                </div>
+                </main>
 
-                {/* Scan Modal Simulation */}
+                {/* Scanning Modal (Minimalist) */}
                 {isScanning && (
-                    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md">
-                        <div className="max-w-md w-full text-center space-y-8">
-                            <div className="relative w-64 h-64 mx-auto border-4 border-orange-500 rounded-[40px] overflow-hidden flex items-center justify-center bg-black">
-                                <div className="absolute inset-0 bg-linear-to-b from-transparent via-orange-500/20 to-transparent animate-pulse" />
-
-                                <QrCode size={120} className="text-white opacity-20" />
-                                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,1)] animate-bounce" />
+                    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-500">
+                        <div className="max-w-md w-full text-center space-y-12">
+                            <div className="relative w-72 h-72 mx-auto border-[1px] border-white/10 rounded-[60px] flex items-center justify-center bg-black/40 shadow-2xl">
+                                <div className="absolute inset-x-0 top-1/2 h-0.5 bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,1)] animate-bounce" />
+                                <QrCode size={100} className="text-white/10" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-black text-white">Scanning QR / Barcode...</h2>
-                                <p className="text-slate-400 text-sm mt-2">Arahkan kamera ke label barang untuk stok opname otomatis.</p>
+                                <h2 className="text-3xl font-black text-white tracking-tight">Audit Mode Active</h2>
+                                <p className="text-slate-500 text-sm mt-4 font-medium uppercase tracking-widest">Scanning MBG Protected Label</p>
                             </div>
-                            <button onClick={() => this.setState({ isScanning: false })} className="px-12 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all">Selesai / Batal</button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Add Vendor Modal */}
-                {isAddingVendor && (
-                    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                        <div className="bg-white w-full max-w-lg rounded-[40px] shadow-3xl overflow-hidden border border-slate-100">
-                            <div className="bg-slate-900 p-8 text-white">
-                                <h2 className="text-2xl font-black">Registrasi Pemasok Baru</h2>
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mt-1">UMKM & Koperasi Database</p>
-                            </div>
-                            <form onSubmit={(e) => { e.preventDefault(); this.setState({ isAddingVendor: false }); alert("Pemasok baru berhasil diregistrasi ke sistem."); }} className="p-8 space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Usaha / Pemasok</label>
-                                    <input required type="text" placeholder="Misal: Koperasi Tani Berkah" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-slate-100 outline-none transition-all" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipe Entitas</label>
-                                        <select className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold">
-                                            <option>UMKM</option>
-                                            <option>Koperasi</option>
-                                            <option>PT</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori Utama</label>
-                                        <input required type="text" placeholder="Misal: Sayuran" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold" />
-                                    </div>
-                                </div>
-                                <div className="flex gap-4 pt-4">
-                                    <button type="button" onClick={() => this.setState({ isAddingVendor: false })} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest">Batal</button>
-                                    <button type="submit" className="flex-2 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">Validasi & Simpan</button>
-                                </div>
-                            </form>
+                            <button onClick={() => this.setState({ isScanning: false })} className="px-12 py-4 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-[0.2em] active:scale-95 transition-all shadow-xl hover:bg-slate-100">Terminate Scan</button>
                         </div>
                     </div>
                 )}
