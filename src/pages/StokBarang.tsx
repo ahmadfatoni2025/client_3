@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { Search, Filter, Download, Plus, LayoutGrid, List, X, Loader2, Save, Trash2, Edit } from 'lucide-react';
+import { Search, Filter, Download, Plus, LayoutGrid, List, X, Loader2, Save, } from 'lucide-react';
 import TabelInventory from '../ui/tabelInventory';
 
 interface State {
