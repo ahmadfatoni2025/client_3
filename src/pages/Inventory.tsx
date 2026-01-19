@@ -24,58 +24,22 @@ interface Vendor {
     lastOrder: string;
 }
 
-interface PurchaseOrder {
-    id: string;
-    vendor: string;
-    date: string;
-    total: number;
-    status: 'Pending' | 'Selesai' | 'Dibatalkan';
-}
-
 interface State {
-    activeTab: 'inventory' | 'suppliers' | 'procurement' | 'opname';
-    viewMode: 'grid' | 'table';
     searchQuery: string;
-    showStats: boolean;
     vendors: Vendor[];
-    pos: PurchaseOrder[];
-    isAddingVendor: boolean;
     isScanning: boolean;
-    selectedCategory: string;
 }
 
 export class Inventory extends Component<{}, State> {
-    categories = [
-        { name: 'Fruits', icon: '🍎', bg: 'bg-slate-50' },
-        { name: 'Bread', icon: '🍞', bg: 'bg-slate-50' },
-        { name: 'Vegetable', icon: '🥦', bg: 'bg-slate-50' },
-        { name: 'Fish', icon: '🐟', bg: 'bg-slate-50' },
-        { name: 'Meat', icon: '🍖', bg: 'bg-slate-50' },
-        { name: 'Drinks', icon: '🥤', bg: 'bg-slate-50' },
-        { name: 'Sea Food', icon: '🐙', bg: 'bg-slate-50' },
-        { name: 'Ice cream', icon: '🍦', bg: 'bg-slate-50' },
-        { name: 'Juice', icon: '🍹', bg: 'bg-slate-50' },
-        { name: 'Jam', icon: '🍯', bg: 'bg-slate-50' },
-    ];
-
     constructor(props: {}) {
         super(props);
         this.state = {
-            activeTab: 'inventory',
-            viewMode: 'grid',
             searchQuery: '',
-            showStats: true,
-            isAddingVendor: false,
             isScanning: false,
-            selectedCategory: 'Semua',
             vendors: [
                 { id: 'V001', name: 'Koperasi Tani Makmur', type: 'Koperasi', performance: 95, category: 'Sayuran', lastOrder: '2026-01-18' },
                 { id: 'V002', name: 'UMKM Beras Cianjur', type: 'UMKM', performance: 88, category: 'Beras', lastOrder: '2026-01-15' },
                 { id: 'V003', name: 'PT Telur Jaya', type: 'PT', performance: 92, category: 'Protein', lastOrder: '2026-01-19' },
-            ],
-            pos: [
-                { id: 'PO-2026-001', vendor: 'Koperasi Tani Makmur', date: '2026-01-18', total: 4500000, status: 'Selesai' },
-                { id: 'PO-2026-002', vendor: 'UMKM Beras Cianjur', date: '2026-01-19', total: 12000000, status: 'Pending' },
             ]
         };
     }
@@ -184,7 +148,7 @@ export class Inventory extends Component<{}, State> {
                         <div className="lg:col-span-3 space-y-10 sticky top-8 h-fit">
                             {/* Critical Alerts */}
                             <section className="bg-slate-950 rounded-[40px] p-8 text-white relative overflow-hidden shadow-2xl">
-                                <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12Scale-110 transition-transform"><AlertTriangle size={80} /></div>
+                                <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12 transition-transform"><AlertTriangle size={80} /></div>
                                 <h3 className="text-[10px] font-black tracking-[0.2em] uppercase mb-8 flex items-center gap-2 text-rose-500">
                                     <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]"></div>
                                     Critical Inventory
