@@ -87,7 +87,7 @@ export class Dashboard extends Component {
                     <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm lg:col-span-2">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-black text-slate-900">Inventaris Terkini</h3>
-                            <button className="text-blue-600 text-sm font-bold hover:underline">Lihat Semua</button>
+                            <button className="text-blue-600 text-sm font-bold hover:underline"><a href="/inventory">Lihat Semua</a></button>
                         </div>
                         <div className="space-y-4">
                             {INVENTORY_DATA.slice(0, 3).map((item) => (
@@ -114,7 +114,7 @@ export class Dashboard extends Component {
                     <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-black text-slate-900">Pesan Terbaru</h3>
-                            <button className="text-blue-600 text-sm font-bold hover:underline">Ke Pesan</button>
+                            <button className="text-blue-600 text-sm font-bold hover:underline"><a href="/messages">Ke Pesan</a></button>
                         </div>
                         <div className="space-y-4">
                             {MESSAGE_GROUPS.slice(0, 3).map((group) => (

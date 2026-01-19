@@ -17,8 +17,7 @@ import {
     AlertTriangle,
     FileText,
     ChefHat,
-    Upload,
-    Trash2
+    Upload
 } from 'lucide-react';
 
 
@@ -153,7 +152,7 @@ export class Nutrisi extends Component<{}, State> {
     };
 
     render() {
-        const { activeTab, items, searchQuery, viewMode, bentoGridSize, selectedIngredients, targetAKG, menuCycle } = this.state;
+        const { activeTab, items, searchQuery, viewMode, selectedIngredients, targetAKG, menuCycle } = this.state;
         const filteredItems = items.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
         const currentCalories = selectedIngredients.reduce((acc, curr) => acc + curr.calories, 0);
@@ -161,25 +160,6 @@ export class Nutrisi extends Component<{}, State> {
 
         return (
             <div className="space-y-6 pb-20">
-                {/* Header NutriPlanner */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] border border-slate-100 shadow-sm overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -mr-32 -mt-32 opacity-40" />
-                    <div className="flex items-center gap-4 md:gap-6 relative z-10">
-                        <div className="w-12 h-12 md:w-16 md:h-16 bg-emerald-600 rounded-[20px] md:rounded-[24px] flex items-center justify-center text-white shadow-2xl shrink-0">
-                            <Apple size={24} className="md:w-8 md:h-8" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">NutriPlanner MBG</h1>
-                            <p className="text-slate-500 font-bold text-[10px] md:text-xs uppercase tracking-[0.2em] mt-1">Perencanaan Gizi & Siklus Menu</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4 relative z-10">
-                        <button onClick={() => alert("Mengekspor Label Nilai Gizi...")} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95">
-                            <Tag size={16} /> <span className="hidden sm:inline">Export Label Gizi</span><span className="sm:hidden">Export</span>
-                        </button>
-                    </div>
-                </div>
-
                 {/* Tab Navigation */}
                 <div className="flex bg-white p-1.5 rounded-2xl border border-slate-100 w-full md:w-fit shadow-sm overflow-x-auto no-scrollbar gap-1">
                     {[
@@ -196,6 +176,11 @@ export class Nutrisi extends Component<{}, State> {
                             {tab.icon} {tab.label}
                         </button>
                     ))}
+                    <div className="flex items-center gap-4 relative z-10">
+                        <button onClick={() => alert("Mengekspor Label Nilai Gizi...")} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95">
+                            <Tag size={16} /> <span className="hidden sm:inline">Export Label Gizi</span><span className="sm:hidden">Export</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

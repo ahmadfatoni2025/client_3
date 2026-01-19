@@ -11,8 +11,18 @@ import {
     FileText,
     Truck,
     ShoppingBag,
-    QrCode
+    QrCode,
+    LayoutGrid,
+    List,
+    Plus,
+    Filter,
+    ChevronLeft,
+    ChevronRight,
+    Bell,
+    Calendar as CalendarIcon
 } from 'lucide-react';
+
+import { INVENTORY_DATA } from '../data/mockData';
 
 
 import TabelInventory from '../ui/tabelInventory';
@@ -36,26 +46,38 @@ interface PurchaseOrder {
 
 interface State {
     activeTab: 'inventory' | 'suppliers' | 'procurement' | 'opname';
+    viewMode: 'grid' | 'table';
     searchQuery: string;
     showStats: boolean;
     vendors: Vendor[];
     pos: PurchaseOrder[];
     isAddingVendor: boolean;
     isScanning: boolean;
+    selectedCategory: string;
 }
 
 export class Inventory extends Component<{}, State> {
     // Reference to search input if needed for focus management
 
+    categories = [
+        { name: 'Semua', icon: Store, bg: 'bg-slate-100', color: 'text-slate-600' },
+        { name: 'Beras', icon: History, bg: 'bg-emerald-50', color: 'text-emerald-600' },
+        { name: 'Protein', icon: ShoppingBag, bg: 'bg-red-50', color: 'text-red-600' },
+        { name: 'Sayuran', icon: TrendingUp, bg: 'bg-orange-50', color: 'text-orange-600' },
+        { name: 'Bumbu', icon: FileText, bg: 'bg-purple-50', color: 'text-purple-600' },
+        { name: 'Lainnya', icon: BarChart3, bg: 'bg-blue-50', color: 'text-blue-600' },
+    ];
 
     constructor(props: {}) {
         super(props);
         this.state = {
             activeTab: 'inventory',
+            viewMode: 'grid',
             searchQuery: '',
             showStats: true,
             isAddingVendor: false,
             isScanning: false,
+            selectedCategory: 'Semua',
             vendors: [
                 { id: 'V001', name: 'Koperasi Tani Makmur', type: 'Koperasi', performance: 95, category: 'Sayuran', lastOrder: '2026-01-18' },
                 { id: 'V002', name: 'UMKM Beras Cianjur', type: 'UMKM', performance: 88, category: 'Beras', lastOrder: '2026-01-15' },
@@ -74,25 +96,6 @@ export class Inventory extends Component<{}, State> {
 
         return (
             <div className="space-y-6 pb-20">
-                {/* SmartInventory Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] border border-slate-100 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-orange-50 rounded-full blur-3xl -mr-32 -mt-32 opacity-40" />
-                    <div className="flex items-center gap-4 md:gap-6 relative z-10">
-                        <div className="w-12 h-12 md:w-16 md:h-16 bg-orange-600 rounded-[20px] md:rounded-[24px] flex items-center justify-center text-white shadow-2xl shrink-0">
-                            <ShoppingBag size={24} className="md:w-8 md:h-8" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">SmartInventory MBG</h1>
-                            <p className="text-slate-500 font-bold text-[10px] md:text-xs uppercase tracking-[0.2em] mt-1">Sistem Pengadaan & FIFO Tracking</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4 relative z-10">
-                        <button onClick={() => this.setState({ isScanning: true })} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95">
-                            <QrCode size={16} /> <span className="hidden sm:inline">Scan QR/Barcode</span><span className="sm:hidden">Scan</span>
-                        </button>
-                    </div>
-                </div>
-
                 {/* Tab Navigation */}
                 <div className="flex bg-white p-1.5 rounded-2xl border border-slate-100 w-full md:w-fit shadow-sm overflow-x-auto no-scrollbar gap-1">
                     {[
@@ -109,6 +112,9 @@ export class Inventory extends Component<{}, State> {
                             {tab.icon} {tab.label}
                         </button>
                     ))}
+                    <button onClick={() => this.setState({ isScanning: true })} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95">
+                        <QrCode size={16} /> <span className="hidden sm:inline">Scan QR/Barcode</span><span className="sm:hidden">Scan</span>
+                    </button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

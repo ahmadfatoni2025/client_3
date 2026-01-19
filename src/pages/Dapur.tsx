@@ -164,19 +164,22 @@ export class Dapur extends Component<{}, State> {
 
         return (
             <div className="space-y-6 pb-20">
-                {/* Header IoT & Status */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] border border-slate-100 shadow-sm overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-orange-50 rounded-full blur-3xl -mr-32 -mt-32 opacity-40 shrink-0" />
-                    <div className="flex items-center gap-4 md:gap-5 relative z-10">
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-orange-500 rounded-[18px] md:rounded-2xl flex items-center justify-center text-white shadow-xl shrink-0">
-                            <ChefHat size={24} className="md:w-8 md:h-8" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">SmartKitchen MBG</h1>
-                            <p className="text-slate-500 font-bold text-[10px] md:text-xs uppercase tracking-widest mt-0.5">Monitoring IoT & Produksi Terpadu</p>
-                        </div>
-                    </div>
-
+                {/* Tab Navigation */}
+                <div className="flex bg-white p-1.5 rounded-2xl border border-slate-100 w-full md:w-fit shadow-sm overflow-x-auto no-scrollbar gap-1">
+                    {[
+                        { id: 'produksi', label: 'Produksi', icon: <Flame size={16} /> },
+                        { id: 'sop', label: 'SOP', icon: <ClipboardCheck size={16} /> },
+                        { id: 'qc', label: 'QC', icon: <FlaskConical size={16} /> },
+                        { id: 'waste', label: 'Waste', icon: <Trash2 size={16} /> },
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => this.setState({ activeTab: tab.id as any })}
+                            className={`flex items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl text-[10px] md:text-xs font-black transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            {tab.icon} {tab.label}
+                        </button>
+                    ))}
                     <div className="flex flex-wrap items-center gap-4 relative z-10 md:justify-end">
                         <div className="flex flex-col items-start md:items-end">
                             <div className="flex items-center gap-2 px-3 md:px-4 py-2 bg-slate-50 rounded-xl border border-slate-100 shadow-inner">
@@ -194,24 +197,6 @@ export class Dapur extends Component<{}, State> {
                             <Thermometer size={20} className={`md:w-6 md:h-6 ${currentTemp > 26 ? 'text-red-500' : 'text-emerald-500'}`} />
                         </div>
                     </div>
-                </div>
-
-                {/* Tab Navigation */}
-                <div className="flex bg-white p-1.5 rounded-2xl border border-slate-100 w-full md:w-fit shadow-sm overflow-x-auto no-scrollbar gap-1">
-                    {[
-                        { id: 'produksi', label: 'Produksi', icon: <Flame size={16} /> },
-                        { id: 'sop', label: 'SOP', icon: <ClipboardCheck size={16} /> },
-                        { id: 'qc', label: 'QC', icon: <FlaskConical size={16} /> },
-                        { id: 'waste', label: 'Waste', icon: <Trash2 size={16} /> },
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => this.setState({ activeTab: tab.id as any })}
-                            className={`flex items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl text-[10px] md:text-xs font-black transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-                        >
-                            {tab.icon} {tab.label}
-                        </button>
-                    ))}
                 </div>
 
                 {/* Tab Contents */}

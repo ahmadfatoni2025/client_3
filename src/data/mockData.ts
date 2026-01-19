@@ -1,5 +1,5 @@
 
-import { ShoppingBag, TrendingUp, Users, CheckCheck, Truck, School } from 'lucide-react';
+// import { ShoppingBag, TrendingUp, Users, CheckCheck, Truck, School } from 'lucide-react';
 
 export const INVENTORY_DATA = [
     { id: 1, name: 'Beras Mentik Wangi 5kg', price: 'Rp 85.000', sales: '1,200', revenue: 'Rp 102jt', stock: '450', status: 'Tersedia', rating: 4.8, selected: false },
