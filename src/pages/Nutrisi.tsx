@@ -5,7 +5,6 @@ import {
     Plus,
     Search,
     LayoutGrid,
-    Apple,
     X,
     Layout,
     Calculator,

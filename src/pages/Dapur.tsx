@@ -1,7 +1,6 @@
 import { Component } from 'react';
 import {
     Flame,
-    ChefHat,
     AlertCircle,
     Thermometer,
     History,

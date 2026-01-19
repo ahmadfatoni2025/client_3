@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { FileText, Download, Check, Clock, AlertCircle, Plus } from 'lucide-react';
+import { FileText, Download, Plus } from 'lucide-react';
 
 export class PengadaanDigital extends Component {
     pos = [
@@ -47,8 +47,8 @@ export class PengadaanDigital extends Component {
                                         <p className="text-xl font-black text-emerald-600 tracking-tight text-right">Rp {po.total.toLocaleString()}</p>
                                     </div>
                                     <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border ${po.status === 'Selesai' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                            po.status === 'Pending' ? 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse' :
-                                                'bg-slate-100 text-slate-400 border-slate-200'
+                                        po.status === 'Pending' ? 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse' :
+                                            'bg-slate-100 text-slate-400 border-slate-200'
                                         }`}>
                                         {po.status}
                                     </span>

@@ -12,8 +12,8 @@ export class ScanOpname extends Component {
 
                 <div className="relative group">
                     <div className="absolute -inset-4 bg-emerald-500/20 rounded-[60px] blur-2xl group-hover:bg-emerald-500/30 transition-all duration-700 animate-pulse" />
-                    <div className="relative w-80 h-80 bg-slate-900 rounded-[56px] border-[8px] border-white shadow-2xl flex flex-col items-center justify-center overflow-hidden">
-                        <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-emerald-500/10 to-transparent" />
+                    <div className="relative w-80 h-80 bg-slate-900 rounded-[56px] border-8 border-white shadow-2xl flex flex-col items-center justify-center overflow-hidden">
+                        <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-emerald-500/10 to-transparent" />
                         <QrCode size={120} className="text-white/20 mb-4" />
                         <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,1)] animate-bounce" />
 

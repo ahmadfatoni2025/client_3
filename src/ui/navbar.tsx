@@ -8,7 +8,6 @@ import {
     Wallet,
     Settings,
     ChevronRight,
-    Search,
     // Mail,
     // Zap,
     // BarChart3,

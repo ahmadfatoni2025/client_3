@@ -2,7 +2,6 @@ import { Component } from 'react';
 
 import {
     Search,
-    Download,
     AlertTriangle,
     BarChart3,
     Store,
@@ -10,16 +9,10 @@ import {
     Truck,
     QrCode,
     Plus,
-    Filter,
-    ChevronLeft,
-    ChevronRight,
     Bell,
-    Calendar as CalendarIcon,
-    Heart,
     Mail
 } from 'lucide-react';
 
-import { INVENTORY_DATA } from '../data/mockData';
 import TabelInventory from '../ui/tabelInventory';
 
 interface Vendor {
@@ -88,7 +81,7 @@ export class Inventory extends Component<{}, State> {
     }
 
     render() {
-        const { activeTab, searchQuery, vendors, pos, isAddingVendor, isScanning, viewMode } = this.state;
+        const { searchQuery, vendors, isScanning } = this.state;
 
         return (
             <div className="flex min-h-screen bg-[#f8fafc] animate-in fade-in duration-700">
@@ -246,7 +239,7 @@ export class Inventory extends Component<{}, State> {
                 {isScanning && (
                     <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-500">
                         <div className="max-w-md w-full text-center space-y-12">
-                            <div className="relative w-72 h-72 mx-auto border-[1px] border-white/10 rounded-[60px] flex items-center justify-center bg-black/40 shadow-2xl">
+                            <div className="relative w-72 h-72 mx-auto border border-white/10 rounded-[60px] flex items-center justify-center bg-black/40 shadow-2xl">
                                 <div className="absolute inset-x-0 top-1/2 h-0.5 bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,1)] animate-bounce" />
                                 <QrCode size={100} className="text-white/10" />
                             </div>

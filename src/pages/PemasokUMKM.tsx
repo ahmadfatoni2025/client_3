@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { Store, Plus, Search, MapPin, Phone, Star } from 'lucide-react';
+import { Store, Plus, MapPin, Phone } from 'lucide-react';
 
 export class PemasokUMKM extends Component {
     vendors = [
