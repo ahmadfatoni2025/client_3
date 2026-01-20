@@ -49,17 +49,41 @@ export const updateCookingStatus = async (req: Request, res: Response) => {
       });
     }
 
-    return res.status(200).json({ 
-      success: true, 
-      message: `Status berhasil diupdate ke ${status}` 
+    return res.status(200).json({
+      success: true,
+      message: `Status berhasil diupdate ke ${status}`
     });
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Gagal update status', 
-      error: message 
+    return res.status(500).json({
+      success: false,
+      message: 'Gagal update status',
+      error: message
     });
+  }
+};
+
+// 3. GET: Ambil Log Aktivitas Dapur
+export const getLogs = async (req: Request, res: Response) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('kitchen_logs')
+      .select(`
+        id,
+        created_at,
+        status,
+        actual_portions,
+        menu_plans ( recipes ( name ) ),
+        profiles ( full_name )
+      `)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error) throw error;
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return res.status(500).json({ success: false, message: 'Gagal ambil log dapur', error: message });
   }
 };
