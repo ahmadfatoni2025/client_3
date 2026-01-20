@@ -6,7 +6,7 @@ export const getBudgetOverview = async (req: Request, res: Response) => {
   try {
     // Ambil data anggaran
     const { data: budgets, error } = await supabaseAdmin
-      .from('budgets')
+      .from('anggaran')
       .select('*');
 
     if (error) throw error;
@@ -24,7 +24,7 @@ export const createExpense = async (req: Request, res: Response) => {
   try {
     // Input ke tabel expenses
     const { data, error } = await supabaseAdmin
-      .from('expenses')
+      .from('pengeluaran')
       .insert({
         budget_id: budgetId,
         title,

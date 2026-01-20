@@ -5,10 +5,11 @@ import { supabaseAdmin } from '../config/supabase';
 // --- 1. API UNTUK MENGAMBIL SEMUA DATA STOK (READ) ---
 export const getAllInventory = async (req: Request, res: Response) => {
   try {
+    // UBAH: ingredients -> bahan_baku
     const { data, error } = await supabaseAdmin
-      .from('ingredients')
+      .from('bahan_baku') 
       .select('*')
-      .order('name', { ascending: true });
+      .order('name', { ascending: true }); // Kolom 'name' tetap inggris
 
     if (error) {
       console.error("🔥 SUPABASE QUERY ERROR:", error);
@@ -20,14 +21,9 @@ export const getAllInventory = async (req: Request, res: Response) => {
       data: data 
     });
 
-  } catch (error) { // <--- HAPUS ": any", BIARKAN KOSONG (Ini Fix-nya)
+  } catch (error) {
     console.error("💥 SYSTEM ERROR:", error);
-
-    // TypeScript otomatis menganggap 'error' sebagai unknown
-    // Kita cek dulu apakah error ini Error beneran atau Object aneh dari Supabase
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : JSON.stringify(error); 
+    const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
     
     return res.status(500).json({
       success: false,
@@ -43,9 +39,10 @@ export const handleStockOpname = async (req: Request, res: Response) => {
 
   try {
     // A. Cek barang
+    // UBAH: ingredients -> bahan_baku
     const { data: product, error: fetchError } = await supabaseAdmin
-      .from('ingredients')
-      .select('id, name, stock_quantity')
+      .from('bahan_baku')
+      .select('id, name, stock_quantity') // Kolom tetap inggris
       .eq('sku', sku)
       .single();
 
@@ -57,8 +54,9 @@ export const handleStockOpname = async (req: Request, res: Response) => {
     const variance = actualQty - product.stock_quantity;
 
     // C. Update Stok
+    // UBAH: ingredients -> bahan_baku
     const { error: updateError } = await supabaseAdmin
-      .from('ingredients')
+      .from('bahan_baku')
       .update({ 
         stock_quantity: actualQty, 
         last_stock_opname: new Date().toISOString()
@@ -72,7 +70,8 @@ export const handleStockOpname = async (req: Request, res: Response) => {
 
     // D. Catat Log Transaksi
     if (variance !== 0) {
-      await supabaseAdmin.from('inventory_transactions').insert({
+      // UBAH: inventory_transactions -> riwayat_stok
+      await supabaseAdmin.from('riwayat_stok').insert({
         ingredient_id: product.id,
         type: 'ADJUSTMENT',
         quantity: variance,
@@ -87,12 +86,9 @@ export const handleStockOpname = async (req: Request, res: Response) => {
       variance: variance
     });
 
-  } catch (error) { // <--- HAPUS ": any" DI SINI JUGA
+  } catch (error) { 
     console.error("💥 OPNAME ERROR:", error);
-    
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : JSON.stringify(error);
+    const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 
     return res.status(500).json({
       success: false, 

@@ -5,8 +5,8 @@ import { supabaseAdmin } from '../config/supabase';
 export const getRecipes = async (req: Request, res: Response) => {
   try {
     const { data, error } = await supabaseAdmin
-      .from('recipes')
-      .select('*, recipe_ingredients(ingredients(name, unit, calories))'); // Join tabel
+      .from('resep')
+      .select('*, komposisi_resep(ingredients(name, unit, calories))'); // Join tabel
 
     if (error) throw error;
 
@@ -22,7 +22,7 @@ export const createMenuPlan = async (req: Request, res: Response) => {
   const { date, mealTime, recipeId, targetPortions } = req.body;
   try {
     const { data, error } = await supabaseAdmin
-      .from('menu_plans')
+      .from('rencana_menu')
       .insert({
         date,
         meal_time: mealTime,
