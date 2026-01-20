@@ -44,3 +44,25 @@ export const createExpense = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: 'Gagal simpan belanja', error: message });
   }
 };
+
+// --- HAPUS PENGELUARAN (DELETE) ---
+export const deleteExpense = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    // Tabel 'pengeluaran'
+    const { error } = await supabaseAdmin
+      .from('pengeluaran')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Transaksi pengeluaran dibatalkan/dihapus'
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Gagal hapus transaksi', error });
+  }
+};

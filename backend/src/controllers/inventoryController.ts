@@ -97,3 +97,47 @@ export const handleStockOpname = async (req: Request, res: Response) => {
     });
   }
 };
+
+// --- 3. EDIT DATA BARANG (PUT) ---
+export const updateItem = async (req: Request, res: Response) => {
+  const { id } = req.params; // Ambil ID dari URL
+  const { name, unit } = req.body; // Data yang mau diubah
+
+  try {
+    // Ingat: Tabel 'bahan_baku'
+    const { error } = await supabaseAdmin
+      .from('bahan_baku')
+      .update({ name: name, unit: unit })
+      .eq('id', id);
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Data barang berhasil diperbarui'
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Gagal update barang', error });
+  }
+};
+
+// --- 4. HAPUS BARANG (DELETE) ---
+export const deleteItem = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const { error } = await supabaseAdmin
+      .from('bahan_baku')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Barang berhasil dihapus dari database'
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Gagal hapus barang', error });
+  }
+};
