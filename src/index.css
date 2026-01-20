@@ -20,3 +20,15 @@ html {
 ::selection {
   @apply bg-blue-100 text-blue-900;
 }
+
+/* Custom Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}

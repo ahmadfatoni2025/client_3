@@ -20,7 +20,7 @@ app.use(express.json());
 // --- DAFTARKAN SEMUA ENDPOINT ---
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/profiles', profilesRoutes);
-app.use('/api/finance', financeRoutes);     // <-- Baru
+app.use('/api/finance', financeRoutes);     // <-- Baru 
 app.use('/api/kitchen', kitchenRoutes);     // <-- Baru
 app.use('/api/nutrition', nutritionRoutes); // <-- Baru
 

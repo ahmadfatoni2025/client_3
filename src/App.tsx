@@ -3,15 +3,15 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Sidebar from './ui/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
-import Nutrisi from './pages/Nutrisi';
+import Nutrisi from './pages/nutrisi/Nutrisi';
 import Dapur from './pages/Dapur';
 import Keuangan from './pages/Keuangan';
 import Pengaturan from './pages/Pengaturan';
-import Messages from './pages/Messages';
+// import Messages from './pages/add/Messages';
 import Email from './pages/Email';
 import Automation from './pages/Automation';
 import Analytics from './pages/Analytics';
-import Help from './pages/Help';
+import Help from './pages/add/Help';
 import Feedback from './pages/Feedback';
 
 import StokBarang from './pages/StokBarang';
@@ -37,11 +37,11 @@ export class App extends Component {
                 <Route path="/pemasok-umkm" element={<PemasokUMKM />} />
                 <Route path="/pengadaan-digital" element={<PengadaanDigital />} />
                 <Route path="/scan-opname" element={<ScanOpname />} />
-                <Route path="/nutrisi" element={<Nutrisi />} />
+                <Route path="/nutrisi/*" element={<Nutrisi />} />
                 <Route path="/dapur" element={<Dapur />} />
                 <Route path="/keuangan" element={<Keuangan />} />
                 <Route path="/pengaturan" element={<Pengaturan />} />
-                <Route path="/messages" element={<Messages />} />
+                {/* <Route path="/messages" element={<Messages />} /> */}
                 <Route path="/email" element={<Email />} />
                 <Route path="/automation" element={<Automation />} />
                 <Route path="/analytics" element={<Analytics />} />

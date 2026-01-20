@@ -1,5 +1,5 @@
 import { Component } from 'react';
-
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { ChangeEvent, FormEvent } from 'react';
 import {
     Plus,
@@ -16,14 +16,166 @@ import {
     AlertTriangle,
     FileText,
     ChefHat,
-    Upload
+    Upload,
+    Check,
+    Trash2,
+    Edit3,
+    Image as ImageIcon
 } from 'lucide-react';
 
+export interface NutritionItem {
+    id: string;
+    name: string;
+    sku?: string;
+    category: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    unit?: string;
+    stock_quantity?: number;
+    status: string;
+    selected: boolean;
+    img?: string;
+    description?: string;
+    price?: number;
+    min_stock_level?: number;
+}
 
+interface TabelNutrisiProps {
+    searchQuery: string;
+    items: NutritionItem[];
+    onToggleSelect: (id: string) => void;
+    onToggleSelectAll: () => void;
+    onDeleteSelected: () => void;
+    onDelete: (id: string) => void;
+    onEdit?: (item: NutritionItem) => void;
+}
 
+class TabelNutrisi extends Component<TabelNutrisiProps> {
+    render() {
+        const { items, onToggleSelect, onToggleSelectAll, onDeleteSelected, onDelete } = this.props;
+        const selectedCount = items.filter(item => item.selected).length;
+        const isAllSelected = items.length > 0 && items.every(item => item.selected);
 
-import TabelNutrisi from '../ui/tabelNutrisi';
-import type { NutritionItem } from '../ui/tabelNutrisi';
+        return (
+            <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden relative min-h-[400px]">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="border-b border-slate-50">
+                            <th className="px-6 py-6 w-10 text-center">
+                                <button
+                                    onClick={onToggleSelectAll}
+                                    className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${isAllSelected ? 'bg-emerald-500 border-emerald-500 shadow-lg shadow-emerald-100' : 'border-slate-200 bg-white hover:border-emerald-300'}`}
+                                >
+                                    {isAllSelected && <Check size={14} className="text-white" strokeWidth={4} />}
+                                </button>
+                            </th>
+                            <th className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Visual</th>
+                            <th className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Bahan & Nutrisi Utama</th>
+                            <th className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Protein</th>
+                            <th className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Karbo</th>
+                            <th className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Lemak</th>
+                            <th className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Kalori</th>
+                            <th className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Status Stok</th>
+                            <th className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right pr-6">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                        {items.map((item) => (
+                            <tr key={item.id} className={`group hover:bg-slate-50/50 transition-all ${item.selected ? 'bg-emerald-50/30' : ''}`}>
+                                <td className="px-6 py-5 relative">
+                                    {item.selected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />}
+                                    <div className="flex justify-center">
+                                        <button
+                                            onClick={() => onToggleSelect(item.id)}
+                                            className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${item.selected ? 'bg-emerald-500 border-emerald-500 shadow-lg shadow-emerald-100' : 'border-slate-200 bg-white group-hover:border-emerald-300'}`}
+                                        >
+                                            {item.selected && <Check size={14} className="text-white" strokeWidth={4} />}
+                                        </button>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-5">
+                                    <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border border-slate-100 shadow-sm relative group-hover:scale-105 transition-transform">
+                                        {item.img ? (
+                                            <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                                <ImageIcon size={24} />
+                                            </div>
+                                        )}
+                                    </div>
+                                </td>
+                                <td className="px-6 py-5">
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-[15px] font-black text-slate-800 tracking-tight">{item.name}</p>
+                                        </div>
+                                        <p className="text-[12px] text-slate-400 font-medium line-clamp-1">{item.description || 'Tidak ada keterangan tambahan.'}</p>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-5 text-[14px] font-black text-slate-700 text-center">{item.protein} <span className="text-[10px] text-slate-400 font-bold uppercase ml-0.5">gr</span></td>
+                                <td className="px-6 py-5 text-[14px] font-black text-slate-700 text-center">{item.carbs} <span className="text-[10px] text-slate-400 font-bold uppercase ml-0.5">gr</span></td>
+                                <td className="px-6 py-5 text-[14px] font-black text-slate-700 text-center">{item.fats} <span className="text-[10px] text-slate-400 font-bold uppercase ml-0.5">gr</span></td>
+                                <td className="px-6 py-5 text-[14px] font-black text-slate-700 text-center">{item.calories} <span className="text-[10px] text-slate-400 font-bold uppercase ml-0.5">kkal</span></td>
+                                <td className="px-6 py-5">
+                                    <span className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider ${item.status === 'Tersedia' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                        item.status === 'Habis' ? 'bg-red-50 text-red-600 border border-red-100' :
+                                            'bg-amber-50 text-amber-600 border border-amber-100'
+                                        }`}>
+                                        {item.status}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-5 text-right pr-6">
+                                    <div className="flex items-center justify-end gap-2">
+                                        <button
+                                            onClick={() => this.props.onEdit && this.props.onEdit(item)}
+                                            className="p-2 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 transition-all bg-slate-50 rounded-xl"
+                                        >
+                                            <Edit3 size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => onDelete(item.id)}
+                                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all bg-slate-50 rounded-xl"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+
+                    </tbody>
+                </table>
+
+                {items.length === 0 && (
+                    <div className="py-24 text-center">
+                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                            <Search size={32} className="text-slate-200" />
+                        </div>
+                        <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Belum ada data nutrisi ditemukan</p>
+                    </div>
+                )}
+
+                {/* Floating Action Bar */}
+                {selectedCount > 0 && (
+                    <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-slate-900 shadow-2xl shadow-slate-900/40 px-6 py-4 rounded-[28px] z-50 border border-white/10 animate-in zoom-in slide-in-from-bottom-8">
+                        <span className="text-[14px] font-black text-white border-r border-slate-700 pr-6 mr-2">
+                            {selectedCount} Terpilih
+                        </span>
+
+                        <button
+                            onClick={onDeleteSelected}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-2xl text-[13px] font-black text-white transition-all shadow-lg active:scale-95"
+                        >
+                            <Trash2 size={18} /> Hapus Terpilih
+                        </button>
+                    </div>
+                )}
+            </div>
+        )
+    }
+}
 
 interface MenuPlan {
     id: string;
@@ -53,7 +205,12 @@ interface State {
     targetAKG: { calories: number, protein: number };
 }
 
-export class Nutrisi extends Component<{}, State> {
+interface NutrisiProps {
+    navigate: (path: string) => void;
+    location: { pathname: string };
+}
+
+class Nutrisi extends Component<NutrisiProps, State> {
     categorySuggestions = ['Buah-buahan', 'Sayuran Hijau', 'Umbi-umbian', 'Kacang-kacangan', 'Biji-bijian'];
 
     handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -96,22 +253,81 @@ export class Nutrisi extends Component<{}, State> {
     }
 
     componentDidMount() {
+        this.syncTabWithUrl();
         this.fetchItems();
+        this.fetchStats();
+    }
+
+    componentDidUpdate(prevProps: NutrisiProps) {
+        if (this.props.location.pathname !== prevProps.location.pathname) {
+            this.syncTabWithUrl();
+        }
+    }
+
+    syncTabWithUrl = () => {
+        const path = this.props.location.pathname;
+        let tab: any = 'database';
+        if (path.includes('/siklus')) tab = 'planner';
+        else if (path.includes('/akg')) tab = 'calculator';
+        else if (path.includes('/tkpi')) tab = 'tkpi';
+
+        if (this.state.activeTab !== tab) {
+            this.setState({ activeTab: tab });
+        }
+    }
+
+    handleTabChange = (tabId: string) => {
+        let path = '/nutrisi';
+        if (tabId === 'planner') path = '/nutrisi/siklus';
+        if (tabId === 'calculator') path = '/nutrisi/akg';
+        if (tabId === 'tkpi') path = '/nutrisi/tkpi';
+        this.props.navigate(path);
+    };
+
+    fetchStats = async () => {
+        try {
+            const response = await fetch('http://localhost:5000/api/nutrition/ingredients/stats/summary');
+            const result = await response.json();
+            if (result.success) {
+                // You can add state for stats if you want to display dynamic summary
+                // For now we just log it or we could bind it to the summary view
+                // this.setState({ stats: result.data }); 
+                console.log("Stats loaded:", result.data);
+            }
+        } catch (err) {
+            console.error("Failed to load stats", err);
+        }
     }
 
     fetchItems = async () => {
         this.setState({ isLoading: true, error: null });
         try {
-            const response = await fetch('http://localhost:5000/api/inventory');
+            // Using a high limit to get all items for the table as per current UI design
+            // In a real app with thousands of items, you'd want server-side pagination.
+            const response = await fetch('http://localhost:5000/api/nutrition/ingredients?limit=100');
             const result = await response.json();
+
             if (result.success) {
                 const formatted = result.data.map((item: any) => ({
-                    ...item,
-                    protein: item.protein || 0,
-                    carbs: item.carbs || 0,
-                    fats: item.fats || 0,
-                    calories: item.calories || 0,
-                    status: item.stock_quantity > 10 ? 'Tersedia' : item.stock_quantity > 0 ? 'Terbatas' : 'Habis',
+                    id: item.id,
+                    name: item.name,
+                    sku: item.sku,
+                    category: item.category,
+                    unit: item.unit,
+
+                    // Nutrition info
+                    calories: Number(item.calories) || 0,
+                    protein: Number(item.protein) || 0,
+                    carbs: Number(item.carbs) || 0,
+                    fats: Number(item.fats) || 0,
+
+                    // Specific fields
+                    stock_quantity: Number(item.stock_quantity) || 0,
+                    min_stock_level: Number(item.min_stock_level) || 0,
+                    status: this.getStockStatusLabel(Number(item.stock_quantity), Number(item.min_stock_level)),
+
+                    img: item.img,
+                    description: item.description,
                     selected: false
                 }));
                 this.setState({ items: formatted, isLoading: false });
@@ -120,14 +336,40 @@ export class Nutrisi extends Component<{}, State> {
             }
         } catch (err) {
             this.setState({ error: 'Gagal mengambil data', isLoading: false });
+            console.error(err);
         }
+    };
+
+    getStockStatusLabel = (qty: number, min: number) => {
+        if (qty <= 0) return 'Habis';
+        if (qty < min) return 'Hampir Habis'; // Or 'Terbatas'
+        return 'Tersedia';
     };
 
     handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => this.setState({ searchQuery: e.target.value });
 
     toggleModal = () => {
         if (this.state.isModalOpen) {
-            this.setState({ isModalOpen: false, isEditing: false, currentItemId: null, newItem: { category: 'Buah-buahan', status: 'Tersedia', img: '', protein: 0, carbs: 0, fats: 0, calories: 0 }, imageFile: null });
+            this.setState({
+                isModalOpen: false,
+                isEditing: false,
+                currentItemId: null,
+                newItem: {
+                    category: 'Buah-buahan',
+                    status: 'Tersedia',
+                    img: '',
+                    protein: 0,
+                    carbs: 0,
+                    fats: 0,
+                    calories: 0,
+                    unit: 'kg',
+                    stock_quantity: 0,
+                    name: '',
+                    sku: '',
+                    min_stock_level: 5
+                },
+                imageFile: null
+            });
         } else {
             this.setState({ isModalOpen: true });
         }
@@ -141,43 +383,64 @@ export class Nutrisi extends Component<{}, State> {
     handleAddItem = async (e: FormEvent) => {
         e.preventDefault();
         this.setState({ isLoading: true });
-        const { newItem, isEditing, currentItemId } = this.state;
+        const { newItem, isEditing, currentItemId, imageFile } = this.state;
 
-        const url = isEditing
-            ? `http://localhost:5000/api/inventory/${currentItemId}`
-            : 'http://localhost:5000/api/inventory';
-        const method = isEditing ? 'PUT' : 'POST';
+        // Helper to convert file to base64
+        const fileToBase64 = (file: File): Promise<string> => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = error => reject(error);
+            });
+        };
+
+        let finalImg = newItem.img;
 
         try {
-            let currentImg = newItem.img;
-
-            if (this.state.imageFile) {
-                const uploadFormData = new FormData();
-                uploadFormData.append('image', this.state.imageFile);
-
-                const uploadRes = await fetch('http://localhost:5000/api/inventory/upload', {
-                    method: 'POST',
-                    body: uploadFormData
-                });
-                const uploadResult = await uploadRes.json();
-                if (uploadResult.success) {
-                    currentImg = uploadResult.url;
-                } else {
-                    throw new Error('Gagal mengupload gambar');
+            // If there is an image file selected, convert it to Base64
+            if (imageFile) {
+                try {
+                    finalImg = await fileToBase64(imageFile);
+                } catch (err) {
+                    console.error("Error converting image to base64", err);
+                    alert("Gagal memproses gambar. Gambar mungkin tidak tersimpan.");
                 }
             }
+
+            // Ensure numeric values are numbers
+            const payload = {
+                ...newItem,
+                img: finalImg,
+                calories: Number(newItem.calories),
+                protein: Number(newItem.protein),
+                carbs: Number(newItem.carbs),
+                fats: Number(newItem.fats),
+                stock_quantity: Number(newItem.stock_quantity),
+                min_stock_level: Number(newItem.min_stock_level) || 5
+            };
+
+            const url = isEditing
+                ? `http://localhost:5000/api/nutrition/ingredients/${currentItemId}`
+                : 'http://localhost:5000/api/nutrition/ingredients';
+            const method = isEditing ? 'PATCH' : 'POST';
 
             const response = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...newItem, img: currentImg })
+                body: JSON.stringify(payload)
             });
+
             const result = await response.json();
             if (result.success) {
                 this.toggleModal();
                 this.fetchItems();
+                this.fetchStats(); // Refresh stats
             } else {
                 alert('Gagal menyimpan: ' + result.message);
+                if (result.errors) {
+                    console.error("Validation errors:", result.errors);
+                }
             }
         } catch (err) {
             alert('Terjadi kesalahan: ' + (err instanceof Error ? err.message : 'Koneksi terputus'));
@@ -191,8 +454,27 @@ export class Nutrisi extends Component<{}, State> {
             isModalOpen: true,
             isEditing: true,
             currentItemId: item.id,
-            newItem: { ...item }
+            // Map item back to form state
+            newItem: {
+                ...item,
+                // Ensure we map specific fields if they differ
+            }
         });
+    };
+
+    handleDelete = async (id: string) => {
+        if (!confirm('Apakah anda yakin ingin menghapus item ini?')) return;
+
+        this.setState({ isLoading: true });
+        try {
+            await fetch(`http://localhost:5000/api/nutrition/ingredients/${id}`, { method: 'DELETE' });
+            this.fetchItems();
+            this.fetchStats();
+        } catch (err) {
+            alert('Gagal menghapus');
+        } finally {
+            this.setState({ isLoading: false });
+        }
     };
 
     handleDeleteSelected = async () => {
@@ -203,9 +485,10 @@ export class Nutrisi extends Component<{}, State> {
         this.setState({ isLoading: true });
         try {
             for (const id of selectedIds) {
-                await fetch(`http://localhost:5000/api/inventory/${id}`, { method: 'DELETE' });
+                await fetch(`http://localhost:5000/api/nutrition/ingredients/${id}`, { method: 'DELETE' });
             }
             this.fetchItems();
+            this.fetchStats(); // Refresh stats
         } catch (err) {
             alert('Gagal menghapus');
         } finally {
@@ -233,29 +516,6 @@ export class Nutrisi extends Component<{}, State> {
 
         return (
             <div className="space-y-6 pb-20">
-                {/* Tab Navigation */}
-                <div className="flex bg-white p-1.5 rounded-2xl border border-slate-100 w-full md:w-fit shadow-sm overflow-x-auto no-scrollbar gap-1">
-                    {[
-                        { id: 'database', label: 'Database', icon: <Database size={16} /> },
-                        { id: 'planner', label: 'Siklus', icon: <Calendar size={16} /> },
-                        { id: 'calculator', label: 'AKG', icon: <Calculator size={16} /> },
-                        { id: 'tkpi', label: 'TKPI', icon: <FileText size={16} /> },
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => this.setState({ activeTab: tab.id as any })}
-                            className={`flex items-center gap-2 px-4 md:px-6 py-3 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-                        >
-                            {tab.icon} {tab.label}
-                        </button>
-                    ))}
-                    <div className="flex items-center gap-4 relative z-10">
-                        <button onClick={() => alert("Mengekspor Label Nilai Gizi...")} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95">
-                            <Tag size={16} /> <span className="hidden sm:inline">Export Label Gizi</span><span className="sm:hidden">Export</span>
-                        </button>
-                    </div>
-                </div>
-
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     <div className="lg:col-span-3">
                         {activeTab === 'database' && (
@@ -296,9 +556,11 @@ export class Nutrisi extends Component<{}, State> {
                                                 this.setState({ items: this.state.items.map(i => ({ ...i, selected: !allSelected })) });
                                             }}
                                             onDeleteSelected={this.handleDeleteSelected}
+                                            onDelete={this.handleDelete}
                                             onEdit={this.handleEdit}
                                         />
                                     </div>
+
                                 ) : (
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                                         {filteredItems.map(item => (
@@ -424,13 +686,7 @@ export class Nutrisi extends Component<{}, State> {
                     </div>
 
                     <div className="space-y-6">
-                        {/* Nutrition Alert / Tip */}
-                        <div className="bg-emerald-600 text-white rounded-[40px] p-8 shadow-xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12"><ChefHat size={80} /></div>
-                            <h3 className="text-lg font-black tracking-tight flex items-center gap-2 mb-4"><AlertTriangle size={20} className="text-emerald-300" /> Cek Stok Kritis</h3>
-                            <p className="text-xs text-emerald-100 leading-relaxed font-medium mb-6">3 Produk dalam rencana menu minggu ini hampir habis di gudang.</p>
-                            <button onClick={() => alert("Mengarahkan ke halaman Inventory...")} className="w-full py-4 bg-white text-emerald-600 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all">Beli Stok Sekarang</button>
-                        </div>
+
 
                         {/* Summary Stats */}
                         <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm">
@@ -508,7 +764,7 @@ export class Nutrisi extends Component<{}, State> {
                                         <div className="space-y-1.5">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kategori</label>
                                             <div className="relative">
-                                                <select name="category" onChange={this.handleInputChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none appearance-none focus:ring-4 focus:ring-emerald-50 cursor-pointer">
+                                                <select name="category" value={this.state.newItem.category} onChange={this.handleInputChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none appearance-none focus:ring-4 focus:ring-emerald-50 cursor-pointer">
                                                     {this.categorySuggestions.map(c => <option key={c} value={c}>{c}</option>)}
                                                     <option value="Lauk Pauk">Lauk Pauk</option>
                                                     <option value="Makanan Pokok">Makanan Pokok</option>
@@ -518,13 +774,29 @@ export class Nutrisi extends Component<{}, State> {
                                             </div>
                                         </div>
 
+                                        {/* Replaced Status with Unit */}
                                         <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status Stok</label>
-                                            <select name="status" onChange={this.handleInputChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-50">
-                                                <option value="Segar">Segar</option>
-                                                <option value="Stok Lama">Stok Lama</option>
-                                                <option value="Terbatas">Terbatas</option>
-                                            </select>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Satuan (Unit)</label>
+                                            <input
+                                                name="unit"
+                                                value={this.state.newItem.unit || ''}
+                                                onChange={this.handleInputChange}
+                                                type="text"
+                                                placeholder="Contoh: kg, gr, pcs, ikat"
+                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-4 focus:ring-emerald-50 outline-none"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Link Foto (Opsional)</label>
+                                            <input
+                                                name="img"
+                                                value={this.state.newItem.img || ''}
+                                                onChange={this.handleInputChange}
+                                                type="text"
+                                                placeholder="https://..."
+                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-4 focus:ring-emerald-50 outline-none"
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -537,7 +809,7 @@ export class Nutrisi extends Component<{}, State> {
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Makanan</label>
                                             <input required name="name" value={this.state.newItem.name || ''} onChange={this.handleInputChange} type="text" placeholder="Contoh: Ayam Goreng Mentega" className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 outline-none transition-all" />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-3 gap-4">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SKU / Kode</label>
                                                 <input name="sku" value={this.state.newItem.sku || ''} onChange={this.handleInputChange} type="text" placeholder="MBG-XXX" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3.5 text-sm font-bold focus:ring-4 focus:ring-emerald-50 outline-none" />
@@ -545,6 +817,10 @@ export class Nutrisi extends Component<{}, State> {
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stok Awal</label>
                                                 <input name="stock_quantity" value={this.state.newItem.stock_quantity || ''} onChange={this.handleInputChange} type="number" placeholder="0" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3.5 text-sm font-bold focus:ring-4 focus:ring-emerald-50 outline-none" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min. Stok</label>
+                                                <input name="min_stock_level" value={this.state.newItem.min_stock_level || ''} onChange={this.handleInputChange} type="number" placeholder="5" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3.5 text-sm font-bold focus:ring-4 focus:ring-emerald-50 outline-none" />
                                             </div>
                                         </div>
                                     </div>
@@ -641,4 +917,10 @@ export class Nutrisi extends Component<{}, State> {
     }
 }
 
-export default Nutrisi;
+function NutrisiWrapper(props: any) {
+    const navigate = useNavigate();
+    const location = useLocation();
+    return <Nutrisi {...props} navigate={navigate} location={location} />;
+}
+
+export default NutrisiWrapper;
