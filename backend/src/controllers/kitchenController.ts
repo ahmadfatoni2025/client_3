@@ -6,7 +6,7 @@ export const getDailyTasks = async (req: Request, res: Response) => {
   try {
     // Ambil menu_plans yang tanggalnya hari ini (simplifikasi: ambil semua yg statusnya belum DONE)
     const { data, error } = await supabaseAdmin
-      .from('menu_plans')
+      .from('rencana_menu')
       .select(`
         id,
         meal_time,
@@ -32,7 +32,7 @@ export const updateCookingStatus = async (req: Request, res: Response) => {
   try {
     // A. Update status di tabel menu_plans
     const { error: updateError } = await supabaseAdmin
-      .from('menu_plans')
+      .from('rencana_menu')
       .update({ status })
       .eq('id', menuPlanId);
 
@@ -41,7 +41,7 @@ export const updateCookingStatus = async (req: Request, res: Response) => {
     // B. Catat Log Aktivitas (Supaya chefId jadi kepake & data lebih lengkap)
     // Kita catat: "Chef X mengubah status menu Y jadi Z"
     if (chefId) {
-      await supabaseAdmin.from('kitchen_logs').insert({
+      await supabaseAdmin.from('catatan_dapur').insert({
         menu_plan_id: menuPlanId,
         status: status,
         chef_id: chefId, // <--- NAH, DI SINI DIA KEPAKE
